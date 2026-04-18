@@ -2,8 +2,18 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const rootDir = path.resolve(process.cwd());
-const docsDataDir = path.resolve(rootDir, '..', 'docs', 'data');
+const defaultDataDir = path.resolve(rootDir, '..', 'docs', 'data');
+const configuredDataDir = process.env.SMART_COMMUTE_DATA_DIR?.trim();
+const docsDataDir = configuredDataDir
+  ? path.resolve(rootDir, configuredDataDir)
+  : defaultDataDir;
 const outputDir = path.resolve(rootDir, 'public', 'data');
+const requiredFiles = [
+  'afluenciastc_desglosado_03_2026.csv',
+  'afluenciamb_desglosado_03_2026.csv',
+  'cicloestaciones_ecobici.csv',
+  'infraestructura-vial-ciclista.json',
+];
 
 const lineColors = {
   'Linea 1': '#ec4899',
@@ -45,6 +55,21 @@ const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
 const ensureDir = (dir) => {
   fs.mkdirSync(dir, { recursive: true });
+};
+
+const assertDataDir = () => {
+  if (!fs.existsSync(docsDataDir)) {
+    throw new Error(
+      `Data directory not found: ${docsDataDir}. Set SMART_COMMUTE_DATA_DIR to your external raw-data folder.`,
+    );
+  }
+
+  const missingFiles = requiredFiles.filter((file) => !fs.existsSync(path.resolve(docsDataDir, file)));
+  if (missingFiles.length > 0) {
+    throw new Error(
+      `Missing required data files in ${docsDataDir}: ${missingFiles.join(', ')}`,
+    );
+  }
 };
 
 const fixMojibake = (value) => {
@@ -112,6 +137,8 @@ const minDistanceToCoordinates = (target, coordinates) => {
 
   return min;
 };
+
+assertDataDir();
 
 const stationAverageMap = new Map();
 const stationSeedMap = new Map(stationSeeds.map((seed) => [slugify(seed.name), seed]));
@@ -317,4 +344,4 @@ const payload = {
 ensureDir(outputDir);
 fs.writeFileSync(path.resolve(outputDir, 'mvp-data.json'), JSON.stringify(payload, null, 2));
 
-console.log(`Generated MVP data with ${stations.length} metro closure nodes.`);
+console.log(`Generated MVP data with ${stations.length} metro closure nodes from ${docsDataDir}.`);
