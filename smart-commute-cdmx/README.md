@@ -24,6 +24,8 @@ npm run generate:data
 
 Si `SMART_COMMUTE_DATA_DIR` no existe, el script sigue leyendo desde `../docs/data` para no romper el flujo actual.
 
+`docs/data/` esta ignorado por Git para que puedas mantener la data cruda de forma local sin ensuciar el repo.
+
 ### Archivos requeridos
 
 - `afluenciastc_desglosado_03_2026.csv`
