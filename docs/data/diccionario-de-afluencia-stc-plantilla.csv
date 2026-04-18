@@ -1,0 +1,8 @@
+No. ,Nombre de la base y/o conjunto de datos,Nombre de la columna,Etiqueta,Descripción,Tipo de dato,Formato,Rango o valores que permite el campo,Registro de campos vacíos 
+1,Afluencia diaria del Metro CDMX,fecha,fecha,Fecha de la medición de afuencia,Fecha,AAAA-MM-DD,fechas,SIN DATOS VACIOS
+2,Afluencia diaria del Metro CDMX,dia,día,Día de la medición de afluencia,Número entero,,número entero,SIN DATOS VACIOS
+3,Afluencia diaria del Metro CDMX,mes,fecha,Mes de la medición de afluencia,Alfanumérico,,"Mes en texto, i.e. ""Enero""",SIN DATOS VACIOS
+4,Afluencia diaria del Metro CDMX,ano,año,Año de la medición de afluencia,Número entero,,Año ,SIN DATOS VACIOS
+5,Afluencia diaria del Metro CDMX,linea,línea,Línea del STC - Metro de la medición de afluencia,Alfanumérico,,"""Línea X""",SIN DATOS VACIOS
+6,Afluencia diaria del Metro CDMX,estacion,estación,Estación del STC - Metro de la medición de Afluencia,Alfanumérico,,Estación en texto,SIN DATOS VACIOS
+7,Afluencia diaria del Metro CDMX,afluencia,afluencia,Afluencia en número de personas. ,Número entero,,Número entero,SIN DATOS VACIOS

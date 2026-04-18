@@ -1,0 +1,417 @@
+# Smart Commute Simulator · CDMX
+### Visualizador de Impacto de Cierres de Transporte · Ciudad de México
+
+> **Product Requirements Document · v1.0 · Abril 2026**  
+> Generado con metodología ANA · Etapas: Entiende → Ordena → Descubre → Diseña → Planea
+
+---
+
+| Campo | Valor |
+|---|---|
+| Producto | Smart Commute Simulator CDMX |
+| Versión PRD | v1.0 |
+| Estado | En definición — MVP |
+| Stack | React · Vite · MapLibre GL JS · OpenFreeMap · Vercel |
+| Fecha | Abril 2026 |
+| Proceso | ANA — Entiende / Ordena / Descubre / Diseña / Planea |
+
+---
+
+## 01 · ANA Entiende — Necesidad Capturada
+
+### 1.1 Necesidad Original
+
+> *"Quiero un visualizador web de afectación cuando se cierran servicios de Metro, Metrobús o vías primarias de la CDMX. Que muestre cuántas personas se afectan con una visualización 3D estilo Google Maps. Similar a Cities Skylines cuando agregas una parada y ves cómo mejora la felicidad de la población cercana."*
+
+### 1.2 Preguntas Pedagógicas — 5 Preguntas Fundamentales
+
+**P1 · ¿Qué quiere lograr el usuario?**
+
+Que cualquier persona (ciudadano, funcionario o periodista) pueda simular el cierre de una estación o vía de transporte en la CDMX y ver visualmente cuántas personas quedan sin cobertura de transporte público, cuánto aumenta su tiempo de commute y qué zonas quedan más vulnerables.
+
+**P2 · ¿Qué hace el sistema exactamente?**
+
+- Permite seleccionar una estación de Metro, parada de Metrobús o vía primaria
+- Marca el elemento como "cerrado" en el mapa
+- Calcula y muestra el número de personas afectadas en el radio de influencia
+- Muestra el incremento estimado en tiempo de commute
+- Visualiza en 3D el impacto sobre la ciudad
+
+**P3 · ¿Qué información se necesita?**
+
+- Geometrías GeoJSON de estaciones y rutas de Metro, Metrobús y vías primarias
+- Datos de afluencia diaria por estación (STC Metro y Metrobús)
+- Datos demográficos por AGEB (INEGI Censo 2020)
+- Modelo de radio de influencia peatonal (buffer 800m por estación)
+- Estimación de tiempo de commute adicional a alternativas más cercanas
+
+**P4 · ¿Qué cambia después de ejecutar una simulación?**
+
+El mapa muestra el área de impacto coloreada, las métricas del panel lateral se actualizan en tiempo real mostrando: personas afectadas, % de aumento en commute, servicio alternativo más cercano y población vulnerable (adultos mayores, personas con discapacidad) dentro del radio.
+
+**P5 · ¿Cómo sabemos que funcionó bien?**
+
+- Las métricas de impacto son consistentes con los datos oficiales de afluencia del STC Metro
+- El radio de influencia corresponde a la distancia real de caminata de 10 minutos (~800m)
+- El usuario puede activar y desactivar cierres sin recargar la página
+- La visualización se renderiza correctamente en desktop y móvil
+
+---
+
+## 02 · ANA Ordena — Modelo ERPAC
+
+### 2.1 Entidades del Dominio
+
+| Entidad | Descripción | Fuente de Datos |
+|---|---|---|
+| Estación de Metro | Punto de acceso al sistema de Metro con coordenadas, línea y afluencia | GTFS CDMX / STC Metro |
+| Parada de Metrobús | Punto de acceso al BRT con coordenadas y línea | GTFS CDMX / Metrobús |
+| Vía Primaria | Corredor vial de acceso controlado (Circuito, Insurgentes, Viaducto, Periférico) | SEMOVI / OpenStreetMap |
+| AGEB Urbana | Unidad geográfica básica con datos de población (INEGI) | Censo 2020 / INEGI |
+| Cierre de Servicio | Evento de suspensión de una estación o segmento vial | Simulado por usuario |
+| Radio de Influencia | Buffer geoespacial de 800m alrededor de una estación | Calculado con Turf.js |
+| Métricas de Impacto | Conjunto de indicadores resultantes de un cierre simulado | Calculado en frontend |
+| Población Afectada | Personas dentro del radio cuyo acceso al transporte se interrumpe | INEGI + GTFS |
+
+### 2.2 Roles
+
+| Rol | Descripción | Modo de Interacción |
+|---|---|---|
+| Ciudadano Curioso | Usuario general interesado en movilidad urbana | Explora el mapa, activa cierres, lee métricas |
+| Funcionario Público | Planificador urbano, SEMOVI, STC Metro | Evalúa impacto antes de tomar decisiones de cierre |
+| Periodista / Investigador | Genera visualizaciones para cobertura noticiosa | Captura screenshots, comparte escenarios |
+| Desarrollador | Integra o extiende la herramienta | Accede al código abierto, personaliza datos |
+
+### 2.3 Participaciones
+
+- El ciudadano consulta el mapa y selecciona elementos para simular cierres
+- El funcionario activa múltiples cierres para evaluar escenarios compuestos
+- El periodista captura la visualización para publicación
+- El sistema calcula automáticamente el impacto al activar cada cierre
+- Los datos externos (GTFS, INEGI, SEMOVI) se consumen en formato estático pre-procesado
+
+### 2.4 Actos (Vocabulario Controlado)
+
+| Acto | Descripción | Actor | Prioridad |
+|---|---|---|---|
+| Consultar Mapa | El usuario visualiza el mapa 3D de la CDMX con capas de transporte | Usuario | Alta |
+| Seleccionar Estación | El usuario hace clic en una estación o vía para ver su información | Usuario | Alta |
+| Realizar Cierre | El usuario activa el cierre de una estación o vía | Usuario | Alta |
+| Calcular Impacto | El sistema calcula personas afectadas, commute delta y población vulnerable | Sistema | Alta |
+| Generar Visualización | El sistema dibuja el radio de influencia y capas de calor en el mapa | Sistema | Alta |
+| Consultar Métricas | El usuario lee el panel de impacto con los indicadores calculados | Usuario | Alta |
+| Agregar Cierre Compuesto | El usuario activa múltiples cierres simultáneamente | Usuario | Media |
+| Modificar Parámetros | El usuario ajusta el radio de influencia o modo de transporte | Usuario | Baja |
+| Obtener Alternativa | El sistema identifica el servicio de transporte alternativo más cercano | Sistema | Alta |
+| Validar Datos | El sistema verifica la integridad de los GeoJSON y datasets cargados | Sistema | Media |
+
+### 2.5 Controles y Reglas de Negocio
+
+- **R01** · El radio de influencia estándar es 800m (caminata de 10 minutos a 80m/min)
+- **R02** · La población afectada se calcula con interpolación areal-weighted sobre AGEBs intersectadas
+- **R03** · No se debe sumar población de AGEBs duplicadas en cierres múltiples (usar unión de buffers)
+- **R04** · El tiempo adicional de commute se estima como: `distancia_a_alternativa / 80 m/min + ½ headway`
+- **R05** · Los datos de afluencia corresponden al promedio de los últimos 90 días hábiles disponibles
+- **R06** · Las métricas se presentan como estimaciones, no como cifras exactas
+- **R07** · Los datos se sirven como archivos estáticos pre-computados (sin backend en MVP)
+- **R08** · La visualización debe funcionar en los últimos 2 años de navegadores modernos
+
+### 2.6 Sistemas Externos
+
+| Sistema | Uso | Tipo de Integración |
+|---|---|---|
+| Portal Datos Abiertos CDMX | GTFS estático, datos de afluencia Metro | Descarga manual en build time |
+| INEGI Censo 2020 | Población por AGEB, datos de vulnerabilidad | Descarga manual en build time |
+| OpenFreeMap | Tiles del mapa base vectorial (dark theme) | API pública sin key — CDN |
+| MapLibre GL JS | Motor de renderizado del mapa 3D | Librería npm |
+| Vercel | Hosting del frontend estático | CLI deploy / GitHub integration |
+| SEMOVI | Red vial primaria y ejes viales CDMX | Descarga manual en build time |
+
+---
+
+## 03 · ANA Descubre — Product Requirements Document
+
+### 3.1 Problem to Solve
+
+No existe ninguna herramienta pública, accesible y visual que permita simular el impacto real sobre la ciudadanía cuando se cierra una estación de Metro, Metrobús o una vía primaria de la CDMX. Funcionarios, periodistas y ciudadanos toman o reportan decisiones de cierre sin poder cuantificar fácilmente cuántas personas quedan sin acceso al transporte público ni cuánto tiempo adicional les toma llegar a su destino.
+
+### 3.2 Why It's Important
+
+- La CDMX tiene el sistema de Metro más transitado de América Latina con más de 4.6M viajes diarios
+- Los cierres por mantenimiento, accidentes o eventos ocurren frecuentemente sin comunicación clara del impacto
+- Las decisiones de cierre se toman actualmente sin herramientas de cuantificación ciudadana
+- El 35% de los hogares CDMX no tiene automóvil — el transporte público es infraestructura crítica
+- No existe equivalente público en México para este tipo de visualización de impacto
+
+### 3.3 How It Benefits Customers
+
+| Segmento | Beneficio Directo |
+|---|---|
+| Ciudadano general | Anticipa afectaciones y planea rutas alternativas antes de que ocurran cierres anunciados |
+| Funcionario / Planificador | Cuantifica impacto ciudadano para tomar decisiones informadas de cuándo y cómo cerrar servicios |
+| Periodista / Investigador | Genera visualizaciones de datos precisas para comunicar el impacto de cierres al público general |
+| Organizaciones civiles | Exige transparencia y documenta el impacto en comunidades vulnerables con datos concretos |
+
+### 3.4 Why This, Why Now
+
+- Los datos están disponibles: GTFS CDMX, afluencia Metro, AGEBs INEGI — todos públicos y descargables
+- La tecnología es madura: MapLibre GL JS permite visualizaciones 3D sin costo de licencias
+- La CDMX implementó obras mayores en Línea 12 y ampliaciones de Metrobús que generan cierres frecuentes
+- El ecosistema de datos abiertos CDMX alcanzó masa crítica con el GTFS multimodal 2022–2024
+- No existe competencia directa: ninguna herramienta pública equivalente en México o América Latina
+
+### 3.5 Risks of Not Doing It
+
+> ⚠️ Sin esta herramienta, los cierres seguirán siendo comunicados solo como "n kilómetros de vialidad afectada" o "estación X cerrada" — sin conectar ese dato con el impacto humano real (cuántas personas, cuánto tiempo, qué alternativas). Esto perpetúa la desconexión entre decisores y ciudadanos.
+
+### 3.6 Target Audience
+
+**Audiencia primaria:** Ciudadanos de la CDMX interesados en movilidad urbana (25–55 años, acceso a smartphone o computadora, usuarios habituales de transporte público).
+
+**Audiencia secundaria:** Funcionarios de SEMOVI, STC Metro, Metrobús y alcaldías; periodistas de medios digitales de ciudad; investigadores de movilidad urbana y organizaciones civiles (Biciudad, Ruta CDMX, ITDP).
+
+### 3.7 Success Metrics — MVP
+
+| Métrica | Definición | Target MVP | Tipo |
+|---|---|---|---|
+| Usuarios activos mensuales | Sesiones únicas en 30 días post-lanzamiento | ≥ 1,000 | Lagging |
+| Tiempo en sesión | Promedio de tiempo por visita | ≥ 2 min | Leading |
+| Cierres simulados | Acciones de cierre activadas por usuarios | ≥ 3/sesión | Leading |
+| Cobertura de datos | Estaciones con datos de impacto precargados | ≥ 80% de estaciones activas | Lagging |
+| Performance mapa | Tiempo de carga inicial del mapa y capas | < 3 segundos | Lagging |
+| Mobile usable | Sesiones completadas desde móvil sin errores | ≥ 60% de sesiones | Lagging |
+| Precisión estimaciones | Validación manual vs datos oficiales de afluencia | ±20% de margen | Lagging |
+
+### 3.8 Operational Efficiency
+
+- Stack 100% frontend estático — costo de hosting Vercel: **$0/mes** (Hobby plan) hasta 100GB/mes de bandwidth
+- Datos pre-computados en build time — sin cómputo en runtime, sin base de datos
+- Actualizaciones de datos: proceso manual trimestral de descarga y re-procesamiento de GTFS (~2h de trabajo)
+- Sin autenticación, sin backend, sin CORS issues — arquitectura de máxima simplicidad operativa
+- GitHub Actions puede automatizar el build y deploy a Vercel en cada push a `main`
+
+### 3.9 Risks & Constraints
+
+| Riesgo | Impacto | Probabilidad | Mitigación |
+|---|---|---|---|
+| GTFS CDMX desactualizado (últ. versión: oct 2022) | Estaciones faltantes (Cablebús, nuevas líneas) | Alta | Complementar con OSM para extensiones recientes |
+| Afluencia Metro sin desglose horario | Métricas de hora pico inexactas | Alta | Usar promedio diario; marcar como estimación |
+| Ausencia de GTFS-Realtime Metro | No hay datos de tiempo real | Confirmada | Limitante de diseño explícita en v1 — roadmap v2 |
+| Performance con 600+ estaciones en mapa | Lentitud en dispositivos de gama baja | Media | Clustering de marcadores + lazy loading de capas |
+| Datos de vías primarias sin afluencia vehicular | Impacto de cierres viales es estimado | Alta | Usar EOD 2017 como proxy + disclaimer visible |
+| Dominio de datos geoespaciales en el equipo | Curva de aprendizaje en ETL (Turf.js, GeoJSON) | Media | Documentar proceso ETL; partir de scripts base |
+
+### 3.10 Assumptions
+
+- **A01** · El usuario tiene acceso a una conexión de internet estable para cargar los tiles del mapa y los GeoJSON
+- **A02** · Los datos del portal datos.cdmx.gob.mx permanecen públicos y descargables sin restricciones de licencia
+- **A03** · El radio de caminata de 800m es una aproximación aceptable del área de influencia de una estación
+- **A04** · Los datos de afluencia del STC Metro son suficientemente representativos para estimar usuarios impactados
+- **A05** · Los datos del Censo INEGI 2020 por AGEB son suficientemente actuales para el MVP
+- **A06** · La interpolación areal-weighted es la metodología adecuada para estimar población en zonas de influencia
+- **A07** · Vercel Hobby plan es suficiente para el tráfico inicial del MVP
+
+---
+
+## 04 · ANA Diseña — Arquitectura 4+1
+
+### 4.1 Vista Lógica — Módulos del Sistema
+
+| Módulo | Responsabilidad | Tecnología |
+|---|---|---|
+| MapEngine | Renderizado del mapa 3D, capas GeoJSON, controles de cámara | MapLibre GL JS v4 |
+| StationLayer | Marcadores interactivos de estaciones Metro / Metrobús | MapLibre GeoJSON + HTML Markers |
+| RoadLayer | Segmentos de vías primarias clickeables | MapLibre Line Layer |
+| ImpactEngine | Cálculo de personas afectadas, commute delta, alternativas | Lookup O(1) sobre JSON precomputado |
+| ImpactVisualizer | Radio de impacto animado, capas de calor sobre AGEBs afectadas | MapLibre Circle + Fill Layer |
+| ClosureStore | Estado global de cierres activos, acumulación de métricas | Zustand store |
+| ClosurePanel | Panel lateral con info del elemento seleccionado | React component |
+| ImpactStats | Panel de métricas agregadas (total personas, % commute) | React component |
+| DataPipeline (ETL) | Scripts de build-time que procesan GTFS + INEGI → JSON | Node.js + Turf.js |
+
+### 4.2 Vista de Procesos — Flujo Principal de Usuario
+
+1. El usuario abre la app → MapLibre carga tiles de OpenFreeMap + GeoJSON de estaciones → mapa renderizado con inclinación 45° y marcadores de estaciones.
+2. El usuario hace clic en una estación → el módulo ClosureStore recibe el evento → marca la estación como "cerrada" → ImpactEngine hace lookup en el JSON precomputado → retorna métricas de impacto.
+3. ImpactVisualizer recibe las coordenadas → añade una capa de círculo animado al mapa representando el radio de 800m → colorea los polígonos AGEB afectados.
+4. ClosurePanel se actualiza con nombre, tipo de cierre, personas afectadas y alternativas → ImpactStats muestra el agregado acumulado de todos los cierres activos.
+5. El usuario puede agregar más cierres (acumulativos) o hacer clic nuevamente para reabrir el servicio.
+
+### 4.3 Vista de Desarrollo — Estructura del Proyecto
+
+```
+smart-commute-cdmx/
+├── src/
+│   ├── components/
+│   │   ├── MapView.tsx
+│   │   ├── ClosurePanel.tsx
+│   │   ├── ImpactStats.tsx
+│   │   ├── Legend.tsx
+│   │   └── Header.tsx
+│   ├── data/
+│   │   ├── stations.ts
+│   │   └── routes.ts
+│   ├── hooks/
+│   │   ├── useImpact.ts
+│   │   ├── useClosures.ts
+│   │   └── useMapReady.ts
+│   ├── store/
+│   │   └── closureStore.ts
+│   └── types/
+│       └── index.ts
+├── scripts/etl/
+│   ├── process_gtfs.js
+│   ├── join_census.js
+│   └── precompute_buffers.js
+├── public/
+├── index.html
+├── vite.config.ts
+├── tsconfig.json
+├── vercel.json
+└── README.md
+```
+
+### 4.4 Vista Física — Deploy
+
+- Frontend estático compilado con Vite → `dist/` → deploy a **Vercel** (Hobby, $0/mes)
+- GeoJSON de datos servidos como archivos estáticos desde el mismo dominio Vercel
+- Tiles del mapa: **OpenFreeMap CDN** (sin costo, sin key requerida)
+- CI/CD: GitHub → Vercel integration → build automático en cada push a `main`
+- Sin base de datos, sin servidor de backend, sin servicios de cloud pagados
+
+### 4.5 Escenarios Clave
+
+| Escenario | Descripción | Componentes Involucrados |
+|---|---|---|
+| Cierre único de estación | Usuario cierra Pantitlán → ve 331,228 personas afectadas y +32% commute | ImpactEngine + ClosurePanel + ImpactVisualizer |
+| Cierre de línea completa | Usuario cierra todas las estaciones de Línea 12 → impacto acumulado sin double-count | ClosureStore (union de buffers) + ImpactStats |
+| Cierre de vía + estación | Usuario cierra Circuito Interior + Tacubaya Metro → impacto compuesto | RoadLayer + StationLayer + ImpactEngine |
+| Zoom a zona afectada | Al activar cierre el mapa hace fly-to automático a la zona de impacto | `MapEngine.flyTo()` + ImpactVisualizer |
+| Vista en móvil | En pantalla pequeña el panel lateral colapsa en modal bottom-sheet | ClosurePanel (responsive) |
+
+---
+
+## 05 · ANA Planea — Roadmap por Etapas
+
+### 5.1 Etapa 1 · Datos y ETL *(Semanas 1–2)*
+
+> **Meta:** Tener todos los datos de transporte y demográficos procesados como archivos JSON estáticos listos para consumo en el frontend.
+
+- Descargar GTFS estático CDMX desde `datos.cdmx.gob.mx/dataset/gtfs`
+- Descargar afluencia diaria Metro desde `datos.cdmx.gob.mx/dataset/afluencia-diaria-del-metro-cdmx`
+- Descargar AGEBs urbanas + Censo 2020 INEGI (join por CVEGEO)
+- Descargar vialidades primarias SEMOVI + complementar con OSM para cobertura completa
+- Escribir script Node.js: parsear `stops.txt` de GTFS → `stations.json` con coordenadas y metadatos
+- Escribir script de interpolación areal: buffer 800m por estación → intersect AGEBs → población afectada
+- Generar `precomputed_impact.json`: `{station_id: {population, ridership, commuteDelta, nearestAlt, vulnerable}}`
+- Validar métricas contra datos oficiales de afluencia — margen aceptable ±20%
+
+### 5.2 Etapa 2 · Mapa Base 3D *(Semanas 2–3)*
+
+> **Meta:** Mapa 3D funcional con edificios extruidos, inclinación de cámara y capas de Metro/Metrobús/Vías renderizadas.
+
+- Crear proyecto React + Vite + TypeScript
+- Integrar MapLibre GL JS con basemap CARTO Dark Matter (dark theme, sin API key)
+- Configurar `pitch: 45°`, `bearing: -15°`, `zoom: 11` — centrado en CDMX
+- Añadir capa `fill-extrusion` para edificios OSM (mapa oscuro con volumen 3D)
+- Cargar y renderizar GeoJSON de rutas: líneas de Metro (colores oficiales) y Metrobús
+- Cargar y renderizar GeoJSON de vías primarias como líneas clickeables
+- Añadir marcadores HTML custom para estaciones (por tipo y línea)
+- Configurar controles de mapa: zoom, rotación, pitch, navegación keyboard
+
+### 5.3 Etapa 3 · Interactividad y Métricas *(Semanas 3–5)*
+
+> **Meta:** Click en estación → impacto animado en mapa → panel lateral con métricas → stats agregados.
+
+- Implementar Zustand store para cierres activos
+- Handler de click en estación: marcar como cerrada → lookup en `precomputed_impact.json`
+- Añadir capa de círculo animado en MapLibre: radio 800m con animación de "pulso" via CSS
+- Colorear AGEBs afectadas con fill layer (opacidad proporcional al % de población en buffer)
+- Construir ClosurePanel (panel lateral): nombre, tipo, icono, métricas de impacto, alternativa
+- Construir ImpactStats (bottom-right): total personas afectadas, servicios cerrados, % delay promedio
+- Implementar `flyTo` automático al activar un cierre
+- Soporte de cierres múltiples: acumulación sin double-count con unión de buffers
+- Botón "Limpiar todos los cierres" para resetear estado
+
+### 5.4 Etapa 4 · Pulido y Deploy *(Semanas 5–6)*
+
+> **Meta:** App lista para producción: responsive, performante, con branding y deployed en Vercel.
+
+- Responsive: ClosurePanel como bottom-sheet en móvil, mapa de pantalla completa
+- Performance: clustering de marcadores en zoom < 12, lazy loading de capas AGEB
+- Disclaimer visible: *"Datos estimados basados en GTFS 2022 y Censo INEGI 2020"*
+- Leyenda interactiva: toggle de capas (Metro, Metrobús, Vías, Edificios 3D)
+- SEO básico: meta tags, OG image con screenshot del mapa de CDMX
+- Configurar `vercel.json` con headers de cache para archivos GeoJSON
+- GitHub Actions: build + test + deploy automático en push a `main`
+- Smoke testing: verificar 10 estaciones clave en desktop y móvil
+
+### 5.5 Backlog Inicial — Historias de Usuario
+
+| Épica | Historia de Usuario | Prioridad | Puntos |
+|---|---|---|---|
+| E1 · Datos | Como desarrollador, necesito el script ETL que genere `stations.json` desde el GTFS CDMX para tener la base de datos de estaciones lista para el frontend | Alta | 5 |
+| E1 · Datos | Como desarrollador, necesito el script de buffer+intersect que genere `precomputed_impact.json` para que el cálculo de impacto sea O(1) en el cliente | Alta | 8 |
+| E2 · Mapa | Como usuario, quiero ver un mapa 3D de la CDMX con las líneas de Metro coloreadas en sus colores oficiales para orientarme fácilmente | Alta | 5 |
+| E2 · Mapa | Como usuario, quiero ver edificios con extrusión 3D para tener contexto visual de la densidad urbana | Media | 3 |
+| E3 · Cierre | Como usuario, quiero hacer clic en una estación para simular su cierre y ver el impacto inmediatamente en el mapa | Alta | 8 |
+| E3 · Cierre | Como usuario, quiero ver cuántas personas se afectan al cerrar una estación para entender el impacto real | Alta | 5 |
+| E3 · Cierre | Como usuario, quiero ver cuál es la alternativa de transporte más cercana para saber qué opciones tienen los afectados | Alta | 3 |
+| E3 · Cierre | Como planificador, quiero activar múltiples cierres simultáneos para evaluar escenarios compuestos | Media | 8 |
+| E4 · UI | Como usuario móvil, quiero ver el panel de métricas como un bottom-sheet para poder usar la app desde mi teléfono | Alta | 5 |
+| E4 · UI | Como usuario, quiero filtrar las capas del mapa (Metro / Metrobús / Vías) para enfocarme en el tipo de transporte que me interesa | Media | 3 |
+
+### 5.6 Hitos y Timeline
+
+| Hito | Semana | Entregable |
+|---|---|---|
+| H1 · Datos listos | S2 | `stations.json` + `precomputed_impact.json` validados |
+| H2 · Mapa funcional | S3 | Mapa 3D con capas de Metro y Metrobús renderizadas |
+| H3 · Interactividad básica | S4 | Click → cierre → métricas funcionando para estaciones Metro |
+| H4 · Cobertura completa | S5 | Metro + Metrobús + Vías con cierres y métricas |
+| H5 · MVP en producción | S6 | App deployed en Vercel, responsive, con datos validados |
+
+### 5.7 Riesgos del Plan
+
+| Riesgo | Semana de Mayor Impacto | Acción |
+|---|---|---|
+| Datos GTFS desactualizados requieren limpieza manual extensa | S1–S2 | Reservar 2 días extra para limpieza; documentar discrepancias |
+| La interpolación areal-weighted en ~2,500 AGEBs es lenta en browser | S3 | Pre-computar TODOS los buffers en ETL build-time; el browser solo hace lookup |
+| Carga del GeoJSON de AGEBs supera 5MB → lentitud en mobile | S4 | Simplificar geometrías con mapshaper (tolerancia 0.0001); separar por alcaldía |
+| Tiles OpenFreeMap inaccesibles o lentos en México | S2 | Tener como fallback CARTO Dark Matter tiles (también gratis) |
+
+---
+
+## 06 · Roadmap Post-MVP
+
+### v1.1 · Isócronas Reales de Caminata
+Sustituir buffers circulares por isócronas de caminata reales usando Valhalla o OSRM. Las isócronas respetan la red vial real (no atraviesan autopistas sin paso peatonal), dando una estimación de impacto más precisa, especialmente en zonas con barreras urbanas como viaductos y periférico.
+
+### v2.0 · Routing Multimodal con RAPTOR
+Implementar el algoritmo RAPTOR (Round-Based Public Transit Optimized Router) en el cliente usando el GTFS CDMX como grafo. Esto permite calcular el tiempo exacto de commute adicional de cualquier origen a cualquier destino con la red parcialmente cerrada — convirtiendo el simulador en el primer router multimodal público de la CDMX.
+
+### v2.1 · GTFS-Realtime Metrobús
+Integrar el feed GTFS-Realtime de Metrobús (disponible desde 2026 vía ADIP) para mostrar la posición en tiempo real de los autobuses y estimar tiempos de espera actuales en las alternativas más cercanas a una estación cerrada.
+
+### v3.0 · Escenarios Compuestos y Compartibles
+Agregar un sistema de "escenarios" que permita guardar y compartir configuraciones de múltiples cierres mediante URL (e.g., `?closures=pantitlan,tacubaya,circuito-interior`). Útil para periodistas que documentan eventos específicos y para funcionarios que evalúan planes de obra.
+
+### v3.1 · Población Vulnerable Destacada
+Integrar datos de discapacidad, adultos mayores y acceso a vehículo propio del Censo 2020 para generar un índice de vulnerabilidad por AGEB. Las zonas de alta vulnerabilidad se colorean diferente en el mapa, priorizando la comunicación del impacto en las comunidades con menor capacidad de adaptación.
+
+---
+
+## Referencias de Datos
+
+| Dataset | Fuente | URL | Formato |
+|---|---|---|---|
+| GTFS estático CDMX | Portal Datos Abiertos CDMX | `datos.cdmx.gob.mx/dataset/gtfs` | ZIP (GTFS) |
+| Afluencia diaria Metro | STC Metro / Portal CDMX | `datos.cdmx.gob.mx/dataset/afluencia-diaria-del-metro-cdmx` | CSV |
+| AGEBs Urbanas CDMX | INEGI | `datos.cdmx.gob.mx/dataset/ageb-urbanas` | SHP / GeoJSON |
+| Censo 2020 por AGEB | INEGI | `inegi.org.mx/programas/ccpv/2020` | CSV |
+| Vialidades primarias | SEMOVI / Portal CDMX | `datos.cdmx.gob.mx/dataset/vialidades-de-la-ciudad-de-mexico` | SHP |
+| Red vial OSM | OpenStreetMap / Geofabrik | `download.geofabrik.de/north-america/mexico.html` | PBF |
+
+---
+
+> ⚠️ **Disclaimer:** Las métricas de impacto presentadas en este simulador son **estimaciones** basadas en datos del GTFS CDMX (octubre 2022) y el Censo INEGI 2020. No representan cifras oficiales del STC Metro, SEMOVI ni ninguna dependencia de gobierno. El radio de influencia de 800m es una aproximación estándar de accesibilidad peatonal y puede variar según condiciones urbanas reales.

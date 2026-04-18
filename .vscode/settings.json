@@ -1,0 +1,17 @@
+{
+  "files.watcherExclude": {
+    "**/docs/data/**": true,
+    "**/docs/data/**/*.csv": true,
+    "**/docs/data/**/*.json": true,
+    "**/docs/data/**/*.zip": true,
+    "**/docs/data/**/*.xlsx": true,
+    "**/docs/data/**/*.dbf": true,
+    "**/docs/data/**/*.prj": true,
+    "**/docs/data/**/*.shp": true,
+    "**/docs/data/**/*.shx": true,
+    "**/docs/data/**/*.cpg": true
+  },
+  "search.exclude": {
+    "**/docs/data/**": true
+  }
+}

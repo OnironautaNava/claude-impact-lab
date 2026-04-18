@@ -1,0 +1,11 @@
+No. ,Nombre de la base y/o conjunto de datos,Nombre de la columna,Etiqueta,Descripción,Tipo de dato,Formato ,"Rango o valores que permite el campo
+
+",Registro de campos vacíos 
+1,Afluencia diaria Servicio de Transportes Eléctricos,fecha,fecha,Fecha de la medición de afuencia,Fecha,AAAA-MM-DD,fechas,SIN DATOS VACIOS
+2,Afluencia diaria Servicio de Transportes Eléctricos,ano,año,Año de la medición de afluencia,Número entero,,Año,SIN DATOS VACIOS
+3,Afluencia diaria Servicio de Transportes Eléctricos,mes,fecha,Mes de la medición de afluencia,Alfanumérico,,"Mes en texto, i.e. ""Enero""",SIN DATOS VACIOS
+4,Afluencia diaria Servicio de Transportes Eléctricos,linea,línea,Línea del STE de la medición de afluencia,Alfanumérico,,"""Línea X""",SIN DATOS VACIOS
+5,Afluencia diaria Servicio de Transportes Eléctricos,afluencia_boleto,entradas al STE por boleto,Total de personas que han ingresado bajo el esquema de pago con boleto,Número entero,,Número entero,SIN DATOS VACIOS
+6,Afluencia diaria Servicio de Transportes Eléctricos,afluencia_prepago,entradas al STE por prepago,Total de personas que han ingresado bajo el esquema de prepago,Número entero,,Número entero,SIN DATOS VACIOS
+7,Afluencia diaria Servicio de Transportes Eléctricos,afluencia_gratuidad,entradas al STE por gratuidad,Total de personas que han ingresado bajo el esquema de gratuidad,Número entero,,Número entero,SIN DATOS VACIOS
+8,Afluencia diaria Servicio de Transportes Eléctricos,afluencia_total,entradas totales al STE,Total de personas que a la fecha han ingresado al Servicio de Transportes Eléctricos,Número entero,,Número entero,SIN DATOS VACIOS

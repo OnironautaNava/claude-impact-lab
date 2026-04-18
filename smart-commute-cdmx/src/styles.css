@@ -1,0 +1,376 @@
+:root {
+  --bg: #07131d;
+  --bg-soft: #102131;
+  --card: rgba(9, 20, 31, 0.84);
+  --card-strong: rgba(7, 17, 26, 0.94);
+  --line: rgba(148, 163, 184, 0.24);
+  --text: #edf4ff;
+  --muted: #9ab0c7;
+  --accent: #22c55e;
+  --accent-soft: rgba(34, 197, 94, 0.16);
+  --warn: #f97316;
+  --shadow: 0 24px 80px rgba(0, 0, 0, 0.32);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(34, 197, 94, 0.13), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(249, 115, 22, 0.16), transparent 24%),
+    linear-gradient(135deg, #05101a 0%, #091827 48%, #0d2232 100%);
+  overflow: hidden;
+}
+
+button {
+  font: inherit;
+}
+
+.loading-shell {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px;
+}
+
+.loading-card,
+.hero-card,
+.system-card,
+.layer-card,
+.station-list,
+.floating-panel,
+.summary-grid article,
+.station-card {
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--card);
+  backdrop-filter: blur(18px);
+  box-shadow: var(--shadow);
+}
+
+.loading-card {
+  width: min(540px, 100%);
+  padding: 28px;
+}
+
+.eyebrow,
+.section-label {
+  margin: 0;
+  color: #66e0a3;
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+h1,
+h2 {
+  margin: 0;
+  font-family: 'Arial Narrow', sans-serif;
+  letter-spacing: 0.04em;
+}
+
+h1 {
+  font-size: clamp(2.8rem, 4.2vw, 4rem);
+  line-height: 0.96;
+  overflow-wrap: anywhere;
+}
+
+h2 {
+  font-size: 2.2rem;
+}
+
+.app-shell {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px;
+  min-height: 0;
+  overflow: hidden;
+  border-right: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(7, 17, 26, 0.94), rgba(9, 20, 31, 0.78));
+}
+
+.hero-card,
+.system-card,
+.layer-card,
+.station-list,
+.floating-panel {
+  padding: 18px;
+}
+
+.hero-card {
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+
+.lede,
+.panel-copy,
+.disclaimer {
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.disclaimer {
+  margin-top: 14px;
+  font-size: 0.92rem;
+}
+
+.hero-card h1 {
+  max-width: 8ch;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  flex: 0 0 auto;
+}
+
+.summary-grid article,
+.detail-grid div,
+.metrics-grid article {
+  padding: 14px;
+}
+
+.summary-grid span,
+.metrics-grid span,
+.detail-grid span,
+.bottom-strip span,
+.system-card span,
+.station-card small,
+.mini-metrics span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.summary-grid strong,
+.metrics-grid strong,
+.detail-grid strong,
+.bottom-strip strong,
+.system-card strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 1.15rem;
+}
+
+.system-card,
+.layer-card {
+  display: grid;
+  gap: 14px;
+  flex: 0 0 auto;
+}
+
+.system-tags,
+.chip-row,
+.mini-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.system-tags span,
+.chip,
+.closure-button,
+.primary-button,
+.clear-button {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 10px 14px;
+  color: var(--text);
+  background: rgba(15, 23, 42, 0.72);
+}
+
+.chip,
+.closure-button,
+.primary-button,
+.clear-button,
+.station-hitbox {
+  cursor: pointer;
+}
+
+.chip.active,
+.closure-button.active,
+.primary-button.active {
+  border-color: rgba(34, 197, 94, 0.44);
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(16, 185, 129, 0.12));
+}
+
+.station-list {
+  display: grid;
+  gap: 12px;
+  flex: 1 1 auto;
+  min-height: 260px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.clear-button {
+  padding: 8px 12px;
+}
+
+.station-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+}
+
+.station-card.selected {
+  border-color: rgba(34, 197, 94, 0.42);
+}
+
+.station-hitbox {
+  border: 0;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  text-align: left;
+}
+
+.station-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.line-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.08);
+}
+
+.closure-button,
+.primary-button {
+  font-weight: 600;
+}
+
+.map-stage {
+  position: relative;
+  min-height: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.map-canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.floating-panel {
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  bottom: 20px;
+  width: min(460px, calc(100% - 40px));
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--card-strong);
+}
+
+.metrics-grid,
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.metrics-grid article,
+.detail-grid div,
+.bottom-strip {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(9, 20, 31, 0.78);
+}
+
+.bottom-strip {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 14px;
+  align-items: center;
+  margin-top: 16px;
+  padding: 14px;
+}
+
+.maplibregl-ctrl-top-right {
+  top: 18px;
+  right: 18px;
+}
+
+@media (max-width: 1080px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .map-stage {
+    height: 78vh;
+  }
+
+  .sidebar {
+    overflow-y: auto;
+  }
+
+  .station-list {
+    flex: 0 0 auto;
+    min-height: 220px;
+  }
+}
+
+@media (max-width: 720px) {
+  .summary-grid,
+  .metrics-grid,
+  .detail-grid,
+  .bottom-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .station-card {
+    grid-template-columns: 1fr;
+  }
+
+  .floating-panel {
+    right: 12px;
+    top: 12px;
+    bottom: 12px;
+    max-height: calc(100% - 24px);
+    width: calc(100% - 24px);
+  }
+
+  .sidebar {
+    padding: 12px;
+  }
+}
