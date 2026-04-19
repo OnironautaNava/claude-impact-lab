@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-18T23:16:56.514Z",
+  "generatedAt": "2026-04-19T00:03:08.517Z",
   "scopeNote": "MVP rapido enfocado en cierres de Metro con STC real, usando Ecobici y red ciclista como capas de resiliencia. Metrobus y vias primarias quedan como contexto del sistema, no como cierres interactivos en esta version.",
   "methodologyNote": "Las personas impactadas y el delta de commute son proxys calculados con afluencia reciente, densidad de alternativas ciclistas y cobertura cercana. No sustituyen un modelo AGEB/INEGI.",
   "summary": {

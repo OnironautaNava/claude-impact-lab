@@ -3,10 +3,28 @@ import path from 'node:path';
 
 const rootDir = path.resolve(process.cwd());
 const defaultDataDir = path.resolve(rootDir, '..', 'docs', 'data');
-const configuredDataDir = process.env.SMART_COMMUTE_DATA_DIR?.trim();
-const docsDataDir = configuredDataDir
-  ? path.resolve(rootDir, configuredDataDir)
-  : defaultDataDir;
+const localDataConfigPath = path.resolve(rootDir, 'data-source.local');
+
+const resolveDataDir = (configuredPath) => {
+  if (!configuredPath) {
+    return defaultDataDir;
+  }
+
+  return path.isAbsolute(configuredPath)
+    ? configuredPath
+    : path.resolve(rootDir, configuredPath);
+};
+
+const readLocalDataDir = () => {
+  if (!fs.existsSync(localDataConfigPath)) {
+    return '';
+  }
+
+  return fs.readFileSync(localDataConfigPath, 'utf8').trim();
+};
+
+const configuredDataDir = process.env.SMART_COMMUTE_DATA_DIR?.trim() || readLocalDataDir();
+const docsDataDir = resolveDataDir(configuredDataDir);
 const outputDir = path.resolve(rootDir, 'public', 'data');
 const requiredFiles = [
   'afluenciastc_desglosado_03_2026.csv',
