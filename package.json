@@ -1,0 +1,12 @@
+{
+  "name": "claude-impact-lab",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "cdmx:dev": "npm --prefix smart-commute-cdmx run dev",
+    "cdmx:typecheck": "npm --prefix smart-commute-cdmx run typecheck",
+    "cdmx:generate:data": "npm --prefix smart-commute-cdmx run generate:data",
+    "cdmx:generate:sprint1": "npm --prefix smart-commute-cdmx run generate:sprint1",
+    "cdmx:generate:multimodal": "npm --prefix smart-commute-cdmx run generate:multimodal"
+  }
+}

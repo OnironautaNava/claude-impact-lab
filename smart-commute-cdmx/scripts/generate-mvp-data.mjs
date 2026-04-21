@@ -70,6 +70,8 @@ const stationSeeds = [
 ];
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+const round1 = (value) => Math.round(value * 10) / 10;
+const impactModelVersion = 'v2.0-calibrated';
 
 const ensureDir = (dir) => {
   fs.mkdirSync(dir, { recursive: true });
@@ -300,18 +302,45 @@ const stations = stationSeeds
       return distance <= 1000 ? sum + Number(feature.properties.longKm || 0) : sum;
     }, 0);
 
+    const transferPenalty = Math.max(0, seed.lines.length - 1);
+    const nearestDistance = Number.isFinite(nearestEcobici.distance) ? nearestEcobici.distance : 1500;
+
     const resilienceScore = clamp(
-      Math.round(nearbyEcobici.length * 4 + cycleKmNearby * 9),
+      Math.round(
+        nearbyEcobici.length * 3.4 +
+          cycleKmNearby * 6.6 +
+          Math.max(0, 12 - nearestDistance / 130) * 3.2 -
+          transferPenalty * 5,
+      ),
       8,
       100,
     );
+
     const commuteDeltaPct = clamp(
-      Math.round(38 - resilienceScore * 0.18 + Math.max(0, seed.lines.length - 1) * 2),
-      12,
-      42,
+      Math.round(
+        13 +
+          transferPenalty * 4.4 +
+          Math.max(0, 11 - cycleKmNearby * 0.36) +
+          Math.max(0, 8 - nearbyEcobici.length * 0.45) +
+          Math.min(12, nearestDistance / 155),
+      ),
+      10,
+      45,
     );
-    const impactedPeople = Math.round(dailyRidership * (2.45 - resilienceScore / 220));
-    const vulnerablePeople = Math.round(impactedPeople * 0.18);
+
+    const impactShare = clamp(
+      0.76 + transferPenalty * 0.055 - resilienceScore * 0.0034,
+      0.38,
+      0.92,
+    );
+    const impactedPeople = Math.round(dailyRidership * impactShare);
+
+    const vulnerabilityShare = clamp(
+      0.13 + (100 - resilienceScore) * 0.002 + commuteDeltaPct * 0.0014,
+      0.1,
+      0.34,
+    );
+    const vulnerablePeople = Math.round(impactedPeople * vulnerabilityShare);
 
     return {
       id: seed.id,
@@ -323,29 +352,74 @@ const stations = stationSeeds
       impactedPeople,
       vulnerablePeople,
       commuteDeltaPct,
+      impactSharePct: round1(impactShare * 100),
+      vulnerabilitySharePct: round1(vulnerabilityShare * 100),
+      transferPenalty,
       nearbyEcobici: nearbyEcobici.length,
       cycleKmNearby: Number(cycleKmNearby.toFixed(1)),
       nearestAlternative: nearestEcobici.feature?.properties?.name ?? 'Cobertura ciclista cercana',
-      nearestAlternativeDistanceM: Math.round(nearestEcobici.distance),
+      nearestAlternativeDistanceM: Math.round(nearestDistance),
       resilienceScore,
     };
   })
   .filter((station) => station.dailyRidership > 0)
   .sort((a, b) => b.dailyRidership - a.dailyRidership);
 
+const metroNetworkFeatures = [];
+for (const [line, color] of Object.entries(lineColors)) {
+  const lineStations = stations
+    .filter((station) => station.lines.includes(line))
+    .sort((a, b) => a.coordinates[0] - b.coordinates[0] || a.coordinates[1] - b.coordinates[1]);
+
+  if (lineStations.length < 2) {
+    continue;
+  }
+
+  for (let index = 0; index < lineStations.length - 1; index += 1) {
+    const from = lineStations[index];
+    const to = lineStations[index + 1];
+    const distanceM = Math.round(haversineMeters(from.coordinates, to.coordinates));
+
+    metroNetworkFeatures.push({
+      type: 'Feature',
+      properties: {
+        line,
+        lineColor: color,
+        from: from.id,
+        to: to.id,
+        distanceM,
+      },
+      geometry: {
+        type: 'LineString',
+        coordinates: [from.coordinates, to.coordinates],
+      },
+    });
+  }
+}
+
+const metroNetworkKm = round1(
+  metroNetworkFeatures.reduce((sum, feature) => sum + Number(feature.properties.distanceM || 0), 0) / 1000,
+);
+
+const networkRidershipDaily = stations.reduce((sum, station) => sum + station.dailyRidership, 0);
+
 const payload = {
   generatedAt: new Date().toISOString(),
   scopeNote:
     'MVP rapido enfocado en cierres de Metro con STC real, usando Ecobici y red ciclista como capas de resiliencia. Metrobus y vias primarias quedan como contexto del sistema, no como cierres interactivos en esta version.',
   methodologyNote:
-    'Las personas impactadas y el delta de commute son proxys calculados con afluencia reciente, densidad de alternativas ciclistas y cobertura cercana. No sustituyen un modelo AGEB/INEGI.',
+    'Las personas impactadas se modelan como porcentaje calibrado de demanda diaria por nodo, ajustado por resiliencia ciclista local y complejidad de transbordo. La propagacion por red usa un corredor Metro simplificado entre nodos del MVP. No sustituye un modelo AGEB/INEGI.',
   summary: {
+    impactModelVersion,
     latestMetroDate,
     latestMetrobusDate,
     averageMetroDaily,
     averageMetrobusDaily,
     ecobiciStations: ecobiciFeatures.length,
     totalCycleKm,
+    metroNetworkSegments: metroNetworkFeatures.length,
+    metroNetworkKm,
+    networkRidershipDaily,
     topMetrobusLines,
   },
   stations,
@@ -356,6 +430,10 @@ const payload = {
   cycleInfra: {
     type: 'FeatureCollection',
     features: cycleInfraFeatures,
+  },
+  metroNetwork: {
+    type: 'FeatureCollection',
+    features: metroNetworkFeatures,
   },
 };
 

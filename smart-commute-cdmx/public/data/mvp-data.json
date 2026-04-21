@@ -1,14 +1,18 @@
 {
-  "generatedAt": "2026-04-19T00:03:08.517Z",
+  "generatedAt": "2026-04-19T00:12:42.436Z",
   "scopeNote": "MVP rapido enfocado en cierres de Metro con STC real, usando Ecobici y red ciclista como capas de resiliencia. Metrobus y vias primarias quedan como contexto del sistema, no como cierres interactivos en esta version.",
-  "methodologyNote": "Las personas impactadas y el delta de commute son proxys calculados con afluencia reciente, densidad de alternativas ciclistas y cobertura cercana. No sustituyen un modelo AGEB/INEGI.",
+  "methodologyNote": "Las personas impactadas se modelan como porcentaje calibrado de demanda diaria por nodo, ajustado por resiliencia ciclista local y complejidad de transbordo. La propagacion por red usa un corredor Metro simplificado entre nodos del MVP. No sustituye un modelo AGEB/INEGI.",
   "summary": {
+    "impactModelVersion": "v2.0-calibrated",
     "latestMetroDate": "2026-03-31",
     "latestMetrobusDate": "2026-03-31",
     "averageMetroDaily": 3409374,
     "averageMetrobusDaily": 1384130,
     "ecobiciStations": 677,
     "totalCycleKm": 39,
+    "metroNetworkSegments": 13,
+    "metroNetworkKm": 94.1,
+    "networkRidershipDaily": 1037677,
     "topMetrobusLines": [
       {
         "line": "Línea 1",
@@ -44,9 +48,12 @@
         19.4151
       ],
       "dailyRidership": 151122,
-      "impactedPeople": 364754,
-      "vulnerablePeople": 65656,
-      "commuteDeltaPct": 42,
+      "impactedPeople": 135677,
+      "vulnerablePeople": 46130,
+      "commuteDeltaPct": 45,
+      "impactSharePct": 89.8,
+      "vulnerabilitySharePct": 34,
+      "transferPenalty": 3,
       "nearbyEcobici": 0,
       "cycleKmNearby": 0,
       "nearestAlternative": "Lic. Primo de Verdad / Moneda",
@@ -65,9 +72,12 @@
         19.3561
       ],
       "dailyRidership": 92651,
-      "impactedPeople": 223626,
-      "vulnerablePeople": 40253,
-      "commuteDeltaPct": 37,
+      "impactedPeople": 67895,
+      "vulnerablePeople": 23084,
+      "commuteDeltaPct": 44,
+      "impactSharePct": 73.3,
+      "vulnerabilitySharePct": 34,
+      "transferPenalty": 0,
       "nearbyEcobici": 0,
       "cycleKmNearby": 0,
       "nearestAlternative": "Ajusco / Antillas",
@@ -86,9 +96,12 @@
         19.4583
       ],
       "dailyRidership": 92350,
-      "impactedPeople": 222899,
-      "vulnerablePeople": 40122,
-      "commuteDeltaPct": 37,
+      "impactedPeople": 67674,
+      "vulnerablePeople": 23009,
+      "commuteDeltaPct": 44,
+      "impactSharePct": 73.3,
+      "vulnerabilitySharePct": 34,
+      "transferPenalty": 0,
       "nearbyEcobici": 0,
       "cycleKmNearby": 0,
       "nearestAlternative": "Presa Falcon / Presa Danxho",
@@ -107,9 +120,12 @@
         19.4952
       ],
       "dailyRidership": 85561,
-      "impactedPeople": 206513,
-      "vulnerablePeople": 37172,
-      "commuteDeltaPct": 37,
+      "impactedPeople": 62699,
+      "vulnerablePeople": 21318,
+      "commuteDeltaPct": 44,
+      "impactSharePct": 73.3,
+      "vulnerabilitySharePct": 34,
+      "transferPenalty": 0,
       "nearbyEcobici": 0,
       "cycleKmNearby": 0,
       "nearestAlternative": "Tlatilco / Av. Jardin",
@@ -130,14 +146,17 @@
         19.4025
       ],
       "dailyRidership": 70507,
-      "impactedPeople": 166332,
-      "vulnerablePeople": 29940,
-      "commuteDeltaPct": 38,
+      "impactedPeople": 52951,
+      "vulnerablePeople": 16807,
+      "commuteDeltaPct": 41,
+      "impactSharePct": 75.1,
+      "vulnerabilitySharePct": 31.7,
+      "transferPenalty": 2,
       "nearbyEcobici": 5,
       "cycleKmNearby": 0,
       "nearestAlternative": "Observatorio Oriente / Av. Revolucion",
       "nearestAlternativeDistanceM": 410,
-      "resilienceScore": 20
+      "resilienceScore": 35
     },
     {
       "id": "universidad",
@@ -151,9 +170,12 @@
         19.3242
       ],
       "dailyRidership": 53218,
-      "impactedPeople": 128449,
-      "vulnerablePeople": 23121,
-      "commuteDeltaPct": 37,
+      "impactedPeople": 38998,
+      "vulnerablePeople": 13259,
+      "commuteDeltaPct": 44,
+      "impactSharePct": 73.3,
+      "vulnerabilitySharePct": 34,
+      "transferPenalty": 0,
       "nearbyEcobici": 0,
       "cycleKmNearby": 0,
       "nearestAlternative": "Cda. Alberto Zamora / Av. Miguel Angel de Quevedo",
@@ -172,9 +194,12 @@
         19.2866
       ],
       "dailyRidership": 53142,
-      "impactedPeople": 128265,
-      "vulnerablePeople": 23088,
-      "commuteDeltaPct": 37,
+      "impactedPeople": 38942,
+      "vulnerablePeople": 13240,
+      "commuteDeltaPct": 44,
+      "impactSharePct": 73.3,
+      "vulnerabilitySharePct": 34,
+      "transferPenalty": 0,
       "nearbyEcobici": 0,
       "cycleKmNearby": 0,
       "nearestAlternative": "Irlanda / Canada",
@@ -193,14 +218,17 @@
         19.3433
       ],
       "dailyRidership": 45882,
-      "impactedPeople": 110742,
-      "vulnerablePeople": 19934,
-      "commuteDeltaPct": 37,
+      "impactedPeople": 31126,
+      "vulnerablePeople": 10346,
+      "commuteDeltaPct": 36,
+      "impactSharePct": 67.8,
+      "vulnerabilitySharePct": 33.2,
+      "transferPenalty": 0,
       "nearbyEcobici": 1,
       "cycleKmNearby": 0,
       "nearestAlternative": "Irlanda / Canada",
       "nearestAlternativeDistanceM": 725,
-      "resilienceScore": 8
+      "resilienceScore": 24
     },
     {
       "id": "buenavista",
@@ -214,14 +242,17 @@
         19.4451
       ],
       "dailyRidership": 45656,
-      "impactedPeople": 97745,
-      "vulnerablePeople": 17594,
-      "commuteDeltaPct": 26,
+      "impactedPeople": 20262,
+      "vulnerablePeople": 3627,
+      "commuteDeltaPct": 25,
+      "impactSharePct": 44.4,
+      "vulnerabilitySharePct": 17.9,
+      "transferPenalty": 0,
       "nearbyEcobici": 17,
       "cycleKmNearby": 0,
       "nearestAlternative": "Jesus Garcia / Carlos J. Meneses",
       "nearestAlternativeDistanceM": 130,
-      "resilienceScore": 68
+      "resilienceScore": 93
     },
     {
       "id": "ciudad-azteca",
@@ -235,9 +266,12 @@
         19.5346
       ],
       "dailyRidership": 42324,
-      "impactedPeople": 102155,
-      "vulnerablePeople": 18388,
-      "commuteDeltaPct": 37,
+      "impactedPeople": 31015,
+      "vulnerablePeople": 10545,
+      "commuteDeltaPct": 44,
+      "impactSharePct": 73.3,
+      "vulnerabilitySharePct": 34,
+      "transferPenalty": 0,
       "nearbyEcobici": 0,
       "cycleKmNearby": 0,
       "nearestAlternative": "San Ildefonso / Republica de Argentina",
@@ -256,9 +290,12 @@
         19.4207
       ],
       "dailyRidership": 42223,
-      "impactedPeople": 84254,
-      "vulnerablePeople": 15166,
-      "commuteDeltaPct": 20,
+      "impactedPeople": 17734,
+      "vulnerablePeople": 2827,
+      "commuteDeltaPct": 21,
+      "impactSharePct": 42,
+      "vulnerabilitySharePct": 15.9,
+      "transferPenalty": 0,
       "nearbyEcobici": 29,
       "cycleKmNearby": 10.4,
       "nearestAlternative": "Puebla / Veracruz",
@@ -277,9 +314,12 @@
         19.4326
       ],
       "dailyRidership": 42102,
-      "impactedPeople": 84013,
-      "vulnerablePeople": 15122,
-      "commuteDeltaPct": 20,
+      "impactedPeople": 17683,
+      "vulnerablePeople": 2868,
+      "commuteDeltaPct": 23,
+      "impactSharePct": 42,
+      "vulnerabilitySharePct": 16.2,
+      "transferPenalty": 0,
       "nearbyEcobici": 24,
       "cycleKmNearby": 4.3,
       "nearestAlternative": "Hegel / Ibarbourou",
@@ -298,9 +338,12 @@
         19.3506
       ],
       "dailyRidership": 41018,
-      "impactedPeople": 99003,
-      "vulnerablePeople": 17821,
-      "commuteDeltaPct": 37,
+      "impactedPeople": 30058,
+      "vulnerablePeople": 10220,
+      "commuteDeltaPct": 44,
+      "impactSharePct": 73.3,
+      "vulnerabilitySharePct": 34,
+      "transferPenalty": 0,
       "nearbyEcobici": 0,
       "cycleKmNearby": 0,
       "nearestAlternative": "Calzada Santa Cruz / Antillas",
@@ -319,14 +362,17 @@
         19.3601
       ],
       "dailyRidership": 39193,
-      "impactedPeople": 94063,
-      "vulnerablePeople": 16931,
-      "commuteDeltaPct": 36,
+      "impactedPeople": 28721,
+      "vulnerablePeople": 9765,
+      "commuteDeltaPct": 44,
+      "impactSharePct": 73.3,
+      "vulnerabilitySharePct": 34,
+      "transferPenalty": 0,
       "nearbyEcobici": 0,
       "cycleKmNearby": 1.2,
       "nearestAlternative": "Romero / Calzada de Tlalpan",
       "nearestAlternativeDistanceM": 13138,
-      "resilienceScore": 11
+      "resilienceScore": 8
     },
     {
       "id": "observatorio",
@@ -340,9 +386,12 @@
         19.3984
       ],
       "dailyRidership": 36548,
-      "impactedPeople": 88214,
-      "vulnerablePeople": 15879,
-      "commuteDeltaPct": 37,
+      "impactedPeople": 26782,
+      "vulnerablePeople": 9106,
+      "commuteDeltaPct": 43,
+      "impactSharePct": 73.3,
+      "vulnerabilitySharePct": 34,
+      "transferPenalty": 0,
       "nearbyEcobici": 0,
       "cycleKmNearby": 0,
       "nearestAlternative": "Gobernador Rafael Rebollar / Gobernado Vicente Eguia",
@@ -361,9 +410,12 @@
         19.4236
       ],
       "dailyRidership": 36396,
-      "impactedPeople": 72627,
-      "vulnerablePeople": 13073,
-      "commuteDeltaPct": 20,
+      "impactedPeople": 15286,
+      "vulnerablePeople": 2522,
+      "commuteDeltaPct": 25,
+      "impactSharePct": 42,
+      "vulnerabilitySharePct": 16.5,
+      "transferPenalty": 0,
       "nearbyEcobici": 34,
       "cycleKmNearby": 0,
       "nearestAlternative": "Liverpool / Genova",
@@ -382,14 +434,17 @@
         19.425
       ],
       "dailyRidership": 34788,
-      "impactedPeople": 83966,
-      "vulnerablePeople": 15114,
-      "commuteDeltaPct": 37,
+      "impactedPeople": 24665,
+      "vulnerablePeople": 8386,
+      "commuteDeltaPct": 38,
+      "impactSharePct": 70.9,
+      "vulnerabilitySharePct": 34,
+      "transferPenalty": 0,
       "nearbyEcobici": 0,
       "cycleKmNearby": 0,
       "nearestAlternative": "San Jeronimo / Jose Maria Pino Suarez",
       "nearestAlternativeDistanceM": 941,
-      "resilienceScore": 8
+      "resilienceScore": 15
     },
     {
       "id": "copilco",
@@ -403,14 +458,17 @@
         19.3366
       ],
       "dailyRidership": 32996,
-      "impactedPeople": 79640,
-      "vulnerablePeople": 14335,
-      "commuteDeltaPct": 37,
+      "impactedPeople": 23843,
+      "vulnerablePeople": 8107,
+      "commuteDeltaPct": 39,
+      "impactSharePct": 72.3,
+      "vulnerabilitySharePct": 34,
+      "transferPenalty": 0,
       "nearbyEcobici": 0,
       "cycleKmNearby": 0,
       "nearestAlternative": "Tata Vasco / Av. Miguel Angel de Quevedo",
       "nearestAlternativeDistanceM": 1103,
-      "resilienceScore": 8
+      "resilienceScore": 11
     }
   ],
   "ecobici": {
@@ -18233,6 +18291,310 @@
             [
               -99.10026697154,
               19.29622607954305
+            ]
+          ]
+        }
+      }
+    ]
+  },
+  "metroNetwork": {
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "properties": {
+          "line": "Linea 1",
+          "lineColor": "#ec4899",
+          "from": "observatorio",
+          "to": "tacubaya",
+          "distanceM": 1418
+        },
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [
+              -99.2007,
+              19.3984
+            ],
+            [
+              -99.1879,
+              19.4025
+            ]
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "line": "Linea 1",
+          "lineColor": "#ec4899",
+          "from": "tacubaya",
+          "to": "chapultepec",
+          "distanceM": 2378
+        },
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [
+              -99.1879,
+              19.4025
+            ],
+            [
+              -99.176,
+              19.4207
+            ]
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "line": "Linea 1",
+          "lineColor": "#ec4899",
+          "from": "chapultepec",
+          "to": "insurgentes",
+          "distanceM": 1432
+        },
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [
+              -99.176,
+              19.4207
+            ],
+            [
+              -99.1627,
+              19.4236
+            ]
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "line": "Linea 1",
+          "lineColor": "#ec4899",
+          "from": "insurgentes",
+          "to": "merced",
+          "distanceM": 3988
+        },
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [
+              -99.1627,
+              19.4236
+            ],
+            [
+              -99.1247,
+              19.425
+            ]
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "line": "Linea 1",
+          "lineColor": "#ec4899",
+          "from": "merced",
+          "to": "pantitlan",
+          "distanceM": 5625
+        },
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [
+              -99.1247,
+              19.425
+            ],
+            [
+              -99.0721,
+              19.4151
+            ]
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "line": "Linea 2",
+          "lineColor": "#2563eb",
+          "from": "cuatro-caminos",
+          "to": "tasquena",
+          "distanceM": 15041
+        },
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [
+              -99.2153,
+              19.4583
+            ],
+            [
+              -99.1398,
+              19.3433
+            ]
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "line": "Linea 3",
+          "lineColor": "#84cc16",
+          "from": "copilco",
+          "to": "universidad",
+          "distanceM": 1977
+        },
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [
+              -99.1764,
+              19.3366
+            ],
+            [
+              -99.1629,
+              19.3242
+            ]
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "line": "Linea 3",
+          "lineColor": "#84cc16",
+          "from": "universidad",
+          "to": "indios-verdes",
+          "distanceM": 19688
+        },
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [
+              -99.1629,
+              19.3242
+            ],
+            [
+              -99.1142,
+              19.4952
+            ]
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "line": "Linea 7",
+          "lineColor": "#f97316",
+          "from": "polanco",
+          "to": "tacubaya",
+          "distanceM": 3347
+        },
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [
+              -99.1883,
+              19.4326
+            ],
+            [
+              -99.1879,
+              19.4025
+            ]
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "line": "Linea 9",
+          "lineColor": "#a16207",
+          "from": "tacubaya",
+          "to": "pantitlan",
+          "distanceM": 12225
+        },
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [
+              -99.1879,
+              19.4025
+            ],
+            [
+              -99.0721,
+              19.4151
+            ]
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "line": "Linea A",
+          "lineColor": "#7c3aed",
+          "from": "pantitlan",
+          "to": "santa-marta",
+          "distanceM": 8393
+        },
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [
+              -99.0721,
+              19.4151
+            ],
+            [
+              -99.0173,
+              19.3601
+            ]
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "line": "Linea A",
+          "lineColor": "#7c3aed",
+          "from": "santa-marta",
+          "to": "la-paz",
+          "distanceM": 2789
+        },
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [
+              -99.0173,
+              19.3601
+            ],
+            [
+              -98.9927,
+              19.3506
+            ]
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "line": "Linea B",
+          "lineColor": "#64748b",
+          "from": "buenavista",
+          "to": "ciudad-azteca",
+          "distanceM": 15802
+        },
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [
+              -99.1527,
+              19.4451
+            ],
+            [
+              -99.0356,
+              19.5346
             ]
           ]
         }

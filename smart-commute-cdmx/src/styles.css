@@ -48,9 +48,12 @@ button {
 .hero-card,
 .system-card,
 .layer-card,
+.scenario-card,
+.decision-card,
 .station-list,
 .floating-panel,
 .summary-grid article,
+.scenario-diff-grid article,
 .station-card {
   border: 1px solid var(--line);
   border-radius: 24px;
@@ -103,7 +106,8 @@ h2 {
   gap: 16px;
   padding: 18px;
   min-height: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   border-right: 1px solid var(--line);
   background: linear-gradient(180deg, rgba(7, 17, 26, 0.94), rgba(9, 20, 31, 0.78));
 }
@@ -111,6 +115,8 @@ h2 {
 .hero-card,
 .system-card,
 .layer-card,
+.scenario-card,
+.decision-card,
 .station-list,
 .floating-panel {
   padding: 18px;
@@ -134,7 +140,9 @@ h2 {
 }
 
 .hero-card h1 {
-  max-width: 8ch;
+  max-width: 12ch;
+  font-size: clamp(2rem, 2.8vw, 2.9rem);
+  line-height: 1.02;
 }
 
 .summary-grid {
@@ -144,9 +152,39 @@ h2 {
   flex: 0 0 auto;
 }
 
+.scenario-card {
+  display: grid;
+  gap: 12px;
+  flex: 0 0 auto;
+}
+
+.decision-card {
+  display: grid;
+  gap: 12px;
+  flex: 0 0 auto;
+}
+
+.decision-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+  font-size: 0.9rem;
+}
+
+.decision-note {
+  font-size: 0.82rem;
+}
+
+.scenario-diff-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
 .summary-grid article,
 .detail-grid div,
-.metrics-grid article {
+.metrics-grid article,
+.scenario-diff-grid article {
   padding: 14px;
 }
 
@@ -217,10 +255,78 @@ h2 {
 .station-list {
   display: grid;
   gap: 12px;
-  flex: 1 1 auto;
-  min-height: 260px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
+  flex: 0 0 auto;
+}
+
+.tree-section,
+.tree-disclosure {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(9, 20, 31, 0.78);
+  padding: 12px;
+}
+
+.tree-title {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.tree-empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.tree-surface {
+  display: grid;
+  gap: 10px;
+}
+
+.tree-disclosure > summary,
+.tree-group > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+  list-style: none;
+  font-weight: 600;
+}
+
+.tree-disclosure > summary {
+  font-size: 0.95rem;
+}
+
+.tree-group > summary small,
+.tree-disclosure > summary small {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.tree-disclosure > summary::-webkit-details-marker,
+.tree-group > summary::-webkit-details-marker {
+  display: none;
+}
+
+.tree-group {
+  border-left: 1px dashed rgba(148, 163, 184, 0.26);
+  padding-left: 10px;
+}
+
+.line-group {
+  margin-top: 8px;
+}
+
+.tree-children {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.station-nodes .station-card {
+  margin-left: 4px;
 }
 
 .list-header {
@@ -257,6 +363,14 @@ h2 {
   display: flex;
   align-items: center;
   gap: 10px;
+  margin-bottom: 4px;
+}
+
+.line-dot-stack {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
   margin-bottom: 6px;
 }
 
@@ -265,6 +379,13 @@ h2 {
   height: 12px;
   border-radius: 999px;
   box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.08);
+}
+
+.line-dot-line {
+  width: 10px;
+  height: 10px;
+  box-shadow: none;
+  border: 1px solid rgba(255, 255, 255, 0.28);
 }
 
 .closure-button,
@@ -296,6 +417,61 @@ h2 {
   background: var(--card-strong);
 }
 
+.map-legend {
+  position: absolute;
+  left: 20px;
+  bottom: 20px;
+  width: clamp(260px, 32vw, 420px);
+  max-height: 42vh;
+  overflow-y: auto;
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(9, 20, 31, 0.9);
+  backdrop-filter: blur(8px);
+}
+
+.legend-badge-grid,
+.legend-line-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.legend-badge-item,
+.legend-line-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.72);
+}
+
+.legend-system-badge {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  border: 2px solid #64748b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.legend-line-chip i {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  display: inline-block;
+}
+
 .metrics-grid,
 .detail-grid {
   display: grid;
@@ -306,10 +482,25 @@ h2 {
 
 .metrics-grid article,
 .detail-grid div,
-.bottom-strip {
+.bottom-strip,
+.trace-card {
   border: 1px solid var(--line);
   border-radius: 18px;
   background: rgba(9, 20, 31, 0.78);
+}
+
+.trace-card {
+  margin-top: 16px;
+  padding: 14px;
+  display: grid;
+  gap: 8px;
+}
+
+.trace-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+  font-size: 0.9rem;
 }
 
 .bottom-strip {
@@ -340,8 +531,8 @@ h2 {
     height: 78vh;
   }
 
-  .sidebar {
-    overflow-y: auto;
+  .map-legend {
+    width: min(92vw, 420px);
   }
 
   .station-list {
@@ -352,6 +543,7 @@ h2 {
 
 @media (max-width: 720px) {
   .summary-grid,
+  .scenario-diff-grid,
   .metrics-grid,
   .detail-grid,
   .bottom-strip {
@@ -368,6 +560,14 @@ h2 {
     bottom: 12px;
     max-height: calc(100% - 24px);
     width: calc(100% - 24px);
+  }
+
+  .map-legend {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    width: auto;
+    max-height: 26vh;
   }
 
   .sidebar {

@@ -1,0 +1,19 @@
+{
+  "generatedAt": "2026-04-20T21:37:53.552459Z",
+  "sourceMode": "kmz-multimodal",
+  "inputs": {
+    "dataDir": "D:\\data_CDMX",
+    "metroStationsKmz": true,
+    "metroLinesKmz": true,
+    "metrobusStationsKmz": true,
+    "metrobusLinesKmz": true,
+    "metroRidershipCsv": true,
+    "metrobusRidershipCsv": true
+  },
+  "outputs": [
+    "multimodal-data.json",
+    "stations.json",
+    "routes.json",
+    "precomputed_impact.json"
+  ]
+}
