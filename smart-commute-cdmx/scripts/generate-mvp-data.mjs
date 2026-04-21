@@ -26,12 +26,24 @@ const readLocalDataDir = () => {
 const configuredDataDir = process.env.SMART_COMMUTE_DATA_DIR?.trim() || readLocalDataDir();
 const docsDataDir = resolveDataDir(configuredDataDir);
 const outputDir = path.resolve(rootDir, 'public', 'data');
-const requiredFiles = [
-  'afluenciastc_desglosado_03_2026.csv',
-  'afluenciamb_desglosado_03_2026.csv',
-  'cicloestaciones_ecobici.csv',
-  'infraestructura-vial-ciclista.json',
-];
+const requiredInputs = {
+  metroRidershipCsv: [
+    'raw-data/stc-metro/ridership/afluenciastc_desglosado_03_2026.csv',
+    'afluenciastc_desglosado_03_2026.csv',
+  ],
+  metrobusRidershipCsv: [
+    'raw-data/metrobus/ridership/afluenciamb_desglosado_03_2026.csv',
+    'afluenciamb_desglosado_03_2026.csv',
+  ],
+  ecobiciCsv: [
+    'raw-data/ecobici/inventory/cicloestaciones_ecobici.csv',
+    'cicloestaciones_ecobici.csv',
+  ],
+  cycleInfraJson: [
+    'raw-data/cycling-infra/network/infraestructura-vial-ciclista.json',
+    'infraestructura-vial-ciclista.json',
+  ],
+};
 
 const lineColors = {
   'Linea 1': '#ec4899',
@@ -77,6 +89,21 @@ const ensureDir = (dir) => {
   fs.mkdirSync(dir, { recursive: true });
 };
 
+const findInputFile = (baseDir, candidates) => {
+  for (const relativePath of candidates) {
+    const resolved = path.resolve(baseDir, relativePath);
+    if (fs.existsSync(resolved)) {
+      return resolved;
+    }
+  }
+
+  return path.resolve(baseDir, candidates[0]);
+};
+
+const resolvedInputs = Object.fromEntries(
+  Object.entries(requiredInputs).map(([key, candidates]) => [key, findInputFile(docsDataDir, candidates)]),
+);
+
 const assertDataDir = () => {
   if (!fs.existsSync(docsDataDir)) {
     throw new Error(
@@ -84,7 +111,9 @@ const assertDataDir = () => {
     );
   }
 
-  const missingFiles = requiredFiles.filter((file) => !fs.existsSync(path.resolve(docsDataDir, file)));
+  const missingFiles = Object.entries(resolvedInputs)
+    .filter(([, filePath]) => !fs.existsSync(filePath))
+    .map(([key, filePath]) => `${key}: ${filePath}`);
   if (missingFiles.length > 0) {
     throw new Error(
       `Missing required data files in ${docsDataDir}: ${missingFiles.join(', ')}`,
@@ -163,7 +192,7 @@ assertDataDir();
 const stationAverageMap = new Map();
 const stationSeedMap = new Map(stationSeeds.map((seed) => [slugify(seed.name), seed]));
 
-const metroRows = parseCsv(path.resolve(docsDataDir, 'afluenciastc_desglosado_03_2026.csv')).map((row) => ({
+const metroRows = parseCsv(resolvedInputs.metroRidershipCsv).map((row) => ({
   date: row.fecha,
   line: fixMojibake(row.linea),
   station: fixMojibake(row.estacion),
@@ -197,7 +226,7 @@ const metroDays = metroDailyTotals.size || 1;
 const averageMetroDaily =
   Math.round(Array.from(metroDailyTotals.values()).reduce((sum, value) => sum + value, 0) / metroDays);
 
-const metrobusRows = parseCsv(path.resolve(docsDataDir, 'afluenciamb_desglosado_03_2026.csv')).map((row) => ({
+const metrobusRows = parseCsv(resolvedInputs.metrobusRidershipCsv).map((row) => ({
   date: row.fecha,
   line: fixMojibake(row.linea),
   ridership: Number.parseInt(row.afluencia, 10) || 0,
@@ -230,7 +259,7 @@ const topMetrobusLines = Array.from(metrobusLineTotals.entries())
   .sort((a, b) => b.averageDailyRidership - a.averageDailyRidership)
   .slice(0, 4);
 
-const ecobiciRows = parseCsv(path.resolve(docsDataDir, 'cicloestaciones_ecobici.csv'));
+const ecobiciRows = parseCsv(resolvedInputs.ecobiciCsv);
 const ecobiciFeatures = ecobiciRows
   .filter((row) => row.estatus === 'Instalada')
   .map((row) => ({
@@ -248,7 +277,7 @@ const ecobiciFeatures = ecobiciRows
   }));
 
 const cycleInfraSource = JSON.parse(
-  fs.readFileSync(path.resolve(docsDataDir, 'infraestructura-vial-ciclista.json'), 'utf8'),
+  fs.readFileSync(resolvedInputs.cycleInfraJson, 'utf8'),
 );
 
 const cycleInfraFeatures = cycleInfraSource.features.map((feature) => {

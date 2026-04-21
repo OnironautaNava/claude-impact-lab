@@ -47,6 +47,17 @@ const ensureDir = (dir) => {
   fs.mkdirSync(dir, { recursive: true });
 };
 
+const findInputFile = (baseDir, candidates) => {
+  for (const relativePath of candidates) {
+    const resolved = path.resolve(baseDir, relativePath);
+    if (fs.existsSync(resolved)) {
+      return resolved;
+    }
+  }
+
+  return path.resolve(baseDir, candidates[0]);
+};
+
 const fixMojibake = (value) => {
   if (typeof value !== 'string') {
     return value;
@@ -158,7 +169,12 @@ const toLineLabel = (routeShortName, routeLongName) => {
 };
 
 const resolveGtfsDir = (baseDir) => {
-  const candidates = [baseDir, path.resolve(baseDir, 'gtfs'), path.resolve(baseDir, 'GTFS')];
+  const candidates = [
+    path.resolve(baseDir, 'raw-data', 'stc-metro', 'gtfs'),
+    path.resolve(baseDir, 'gtfs'),
+    path.resolve(baseDir, 'GTFS'),
+    baseDir,
+  ];
   const required = ['stops.txt', 'routes.txt', 'trips.txt', 'stop_times.txt'];
 
   for (const candidate of candidates) {
@@ -172,7 +188,10 @@ const resolveGtfsDir = (baseDir) => {
 };
 
 const loadMetroRidershipByStation = (baseDir) => {
-  const csvPath = path.resolve(baseDir, 'afluenciastc_desglosado_03_2026.csv');
+  const csvPath = findInputFile(baseDir, [
+    'raw-data/stc-metro/ridership/afluenciastc_desglosado_03_2026.csv',
+    'afluenciastc_desglosado_03_2026.csv',
+  ]);
   if (!fs.existsSync(csvPath)) {
     return new Map();
   }
@@ -359,12 +378,19 @@ const loadFallbackFromMvp = () => {
 
 const resolveAgebSources = (baseDir) => {
   const geoCandidates = [
+    'raw-data/urban-context/ageb/ageb_urbanas.geojson',
+    'raw-data/urban-context/ageb/ageb-urbanas.geojson',
+    'raw-data/urban-context/ageb/ageb_urbanas.json',
+    'raw-data/urban-context/ageb/ageb-urbanas.json',
     'ageb_urbanas.geojson',
     'ageb-urbanas.geojson',
     'ageb_urbanas.json',
     'ageb-urbanas.json',
   ];
   const censoCandidates = [
+    'raw-data/urban-context/ageb/censo_2020_ageb.csv',
+    'raw-data/urban-context/ageb/censo-ageb-2020.csv',
+    'raw-data/urban-context/ageb/inegi_censo_ageb_2020.csv',
     'censo_2020_ageb.csv',
     'censo-ageb-2020.csv',
     'inegi_censo_ageb_2020.csv',
@@ -616,7 +642,12 @@ const run = () => {
     inputs: {
       dataDir,
       gtfsDetected: Boolean(gtfsDir),
-      metroRidershipDetected: fs.existsSync(path.resolve(dataDir, 'afluenciastc_desglosado_03_2026.csv')),
+      metroRidershipDetected: fs.existsSync(
+        findInputFile(dataDir, [
+          'raw-data/stc-metro/ridership/afluenciastc_desglosado_03_2026.csv',
+          'afluenciastc_desglosado_03_2026.csv',
+        ]),
+      ),
       agebDetected: Boolean(agebModel?.agebGeoJsonPath),
       censoDetected: Boolean(agebModel?.censoCsvPath),
       fallbackMvpDetected: fs.existsSync(existingMvpPath),

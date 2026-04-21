@@ -66,6 +66,27 @@ Ajuste de grafo en frontend:
 
 Para evitar que el editor y el tooling indexen datasets pesados dentro del workspace, mueve la carpeta cruda fuera del repo y apunta el ETL con una variable de entorno.
 
+Estructura recomendada del dataset externo (por sistema de transporte):
+
+```text
+D:\data_CDMX\
+└─ raw-data\
+   ├─ stc-metro\
+   │  ├─ ridership\afluenciastc_desglosado_03_2026.csv
+   │  ├─ cartography\kmz\STC_Metro_estaciones.kmz
+   │  ├─ cartography\kmz\STC_Metro_lineas.kmz
+   │  └─ gtfs\(opcional: stops.txt, routes.txt, trips.txt, stop_times.txt)
+   ├─ metrobus\
+   │  ├─ ridership\afluenciamb_desglosado_03_2026.csv
+   │  ├─ cartography\kmz\Metrobus_estaciones.kmz
+   │  └─ cartography\kmz\Metrobus_lineas.kmz
+   ├─ ecobici\inventory\cicloestaciones_ecobici.csv
+   ├─ cycling-infra\network\infraestructura-vial-ciclista.json
+   └─ urban-context\ageb\(opcional: ageb_urbanas.geojson + censo_2020_ageb.csv)
+```
+
+Compatibilidad: los scripts siguen soportando la estructura plana anterior para no romper flujos existentes.
+
 ### Opcion recomendada (sin exportar variable cada vez)
 
 Crea `smart-commute-cdmx/data-source.local` con la ruta absoluta del dataset:
@@ -81,14 +102,14 @@ D:\data_CDMX
 #### PowerShell
 
 ```powershell
-$env:SMART_COMMUTE_DATA_DIR = "D:\raw-data\smart-commute-cdmx"
+$env:SMART_COMMUTE_DATA_DIR = "D:\data_CDMX"
 npm run generate:data
 ```
 
 ### CMD
 
 ```bat
-set SMART_COMMUTE_DATA_DIR=D:\raw-data\smart-commute-cdmx
+set SMART_COMMUTE_DATA_DIR=D:\data_CDMX
 npm run generate:data
 ```
 
@@ -104,7 +125,7 @@ Prioridad de rutas del ETL:
 
 ### Archivos requeridos
 
-- `afluenciastc_desglosado_03_2026.csv`
-- `afluenciamb_desglosado_03_2026.csv`
-- `cicloestaciones_ecobici.csv`
-- `infraestructura-vial-ciclista.json`
+- `raw-data/stc-metro/ridership/afluenciastc_desglosado_03_2026.csv`
+- `raw-data/metrobus/ridership/afluenciamb_desglosado_03_2026.csv`
+- `raw-data/ecobici/inventory/cicloestaciones_ecobici.csv`
+- `raw-data/cycling-infra/network/infraestructura-vial-ciclista.json`

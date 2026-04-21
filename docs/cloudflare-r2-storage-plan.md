@@ -412,3 +412,10 @@ rclone sync "data/raw-data" "r2-project:project-data/raw-data" --progress
 ```bash
 rclone ls "r2-project:project-data/raw-data"
 ```
+
+###next steps
+1. Te dejo un manifest por source (raw-data/<source>/manifest.json)       
+     para gobernanza de versiones y validación automática.                   
+     2. Te agrego un script de “auditoría de estructura” que falle si        
+     alguien vuelve a dejar archivos sueltos fuera de raw-data/<source>/...  
+     .  

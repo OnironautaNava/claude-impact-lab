@@ -59,6 +59,14 @@ def read_data_dir() -> Path:
     return DEFAULT_DATA_DIR
 
 
+def first_existing_path(data_dir: Path, candidates):
+    for relative in candidates:
+        candidate = data_dir / relative
+        if candidate.exists():
+            return candidate
+    return data_dir / candidates[0]
+
+
 def ensure_output_dir() -> None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -561,12 +569,48 @@ def main():
     if not data_dir.exists():
         raise SystemExit(f"Data directory not found: {data_dir}")
 
-    metro_stations_kmz = data_dir / "stcmetro_kmz" / "STC_Metro_estaciones.kmz"
-    metro_lines_kmz = data_dir / "stcmetro_kmz" / "STC_Metro_lineas.kmz"
-    metrobus_stations_kmz = data_dir / "mb_kmz" / "Metrobus_estaciones.kmz"
-    metrobus_lines_kmz = data_dir / "mb_kmz" / "Metrobus_lineas.kmz"
-    metro_ridership_csv = data_dir / "afluenciastc_desglosado_03_2026.csv"
-    metrobus_ridership_csv = data_dir / "afluenciamb_desglosado_03_2026.csv"
+    metro_stations_kmz = first_existing_path(
+        data_dir,
+        [
+            Path("raw-data/stc-metro/cartography/kmz/STC_Metro_estaciones.kmz"),
+            Path("stcmetro_kmz/STC_Metro_estaciones.kmz"),
+        ],
+    )
+    metro_lines_kmz = first_existing_path(
+        data_dir,
+        [
+            Path("raw-data/stc-metro/cartography/kmz/STC_Metro_lineas.kmz"),
+            Path("stcmetro_kmz/STC_Metro_lineas.kmz"),
+        ],
+    )
+    metrobus_stations_kmz = first_existing_path(
+        data_dir,
+        [
+            Path("raw-data/metrobus/cartography/kmz/Metrobus_estaciones.kmz"),
+            Path("mb_kmz/Metrobus_estaciones.kmz"),
+        ],
+    )
+    metrobus_lines_kmz = first_existing_path(
+        data_dir,
+        [
+            Path("raw-data/metrobus/cartography/kmz/Metrobus_lineas.kmz"),
+            Path("mb_kmz/Metrobus_lineas.kmz"),
+        ],
+    )
+    metro_ridership_csv = first_existing_path(
+        data_dir,
+        [
+            Path("raw-data/stc-metro/ridership/afluenciastc_desglosado_03_2026.csv"),
+            Path("afluenciastc_desglosado_03_2026.csv"),
+        ],
+    )
+    metrobus_ridership_csv = first_existing_path(
+        data_dir,
+        [
+            Path("raw-data/metrobus/ridership/afluenciamb_desglosado_03_2026.csv"),
+            Path("afluenciamb_desglosado_03_2026.csv"),
+        ],
+    )
 
     required = [
         metro_stations_kmz,
