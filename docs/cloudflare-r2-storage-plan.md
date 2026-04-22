@@ -25,13 +25,14 @@ Para este caso, Cloudflare R2 es la opcion con mejor costo-beneficio porque:
 
 ## Arquitectura recomendada
 
-Usar **un bucket** con tres prefijos:
+Usar **un bucket** con un prefijo raiz del dataset y tres subprefijos operativos:
 
 ```text
-project-data/
-  raw-data/
-  processed-data/
-  backup/
+smart-commute-sim-data/
+  data_CDMX/
+    raw-data/
+    processed-data/
+    backup/
 ```
 
 ### Por que un solo bucket
@@ -41,10 +42,10 @@ project-data/
 - mas facil de automatizar
 - si luego crece el proyecto, siempre puedes separar en tres buckets
 
-Nombre sugerido del bucket:
+Nombre actual del bucket:
 
 ```text
-project-data
+smart-commute-sim-data
 ```
 
 ---
@@ -52,11 +53,12 @@ project-data
 ## Estructura sugerida
 
 ```text
-project-data/
-  raw-data/source-a/file1.csv
-  raw-data/source-b/file2.parquet
-  processed-data/model-v1/output.parquet
-  backup/2026-04-20/raw-data.zip
+smart-commute-sim-data/
+  data_CDMX/
+    raw-data/source-a/file1.csv
+    raw-data/source-b/file2.parquet
+    processed-data/model-v1/output.parquet
+    backup/2026-04-20/raw-data.zip
 ```
 
 Convenciones recomendadas:
@@ -84,7 +86,7 @@ Convenciones recomendadas:
 2. Crear el bucket con el nombre:
 
 ```text
-project-data
+smart-commute-sim-data
 ```
 
 3. Confirmar la creacion.
@@ -98,7 +100,7 @@ No hace falta crear manualmente las carpetas. Los prefijos se generan automatica
 Antes de subir nada, organizar localmente tus carpetas asi:
 
 ```text
-data/
+D:\data_CDMX\
   raw-data/
   processed-data/
   backup/
@@ -108,9 +110,9 @@ Si ya tienes otra estructura, no hace falta mover todo ahora, pero SI conviene d
 
 Mapeo sugerido:
 
-- carpeta local `data/raw-data/` -> `project-data/raw-data/`
-- carpeta local `data/processed-data/` -> `project-data/processed-data/`
-- carpeta local `data/backup/` -> `project-data/backup/`
+- carpeta local `D:\data_CDMX\raw-data\` -> `smart-commute-sim-data/data_CDMX/raw-data/`
+- carpeta local `D:\data_CDMX\processed-data\` -> `smart-commute-sim-data/data_CDMX/processed-data/`
+- carpeta local `D:\data_CDMX\backup\` -> `smart-commute-sim-data/data_CDMX/backup/`
 
 ---
 
@@ -140,6 +142,8 @@ Guardarlas en:
 
 `rclone` es la forma mas simple y estable de trabajar con Cloudflare R2 desde varias maquinas.
 
+Nota operativa actual: el bucket ya contiene un prefijo raiz `data_CDMX/`. Ese prefijo debe mantenerse para no mezclar datasets ni romper la estructura remota existente.
+
 Instalarlo desde la web oficial o con tu gestor de paquetes.
 
 Verificar instalacion:
@@ -160,20 +164,22 @@ rclone config
 
 Configurar un remote nuevo con estos criterios:
 
-- nombre sugerido: `r2-project`
+- nombre actual: `r2-smart-commute`
 - tipo de storage: `s3`
 - provider: `Cloudflare`
 - endpoint: pegar el endpoint S3 de tu cuenta R2
 - access key: pegar `Access Key ID`
 - secret key: pegar `Secret Access Key`
 
-Cuando termine, validar el acceso listando buckets:
+En este proyecto, las credenciales estan limitadas al bucket `smart-commute-sim-data`, asi que NO siempre podras listar todos los buckets.
+
+Cuando termine, validar el acceso contra el bucket permitido:
 
 ```bash
-rclone lsd r2-project:
+rclone lsd "r2-smart-commute:smart-commute-sim-data"
 ```
 
-Si todo esta bien, deberias ver el bucket `project-data`.
+Si todo esta bien, deberias ver los prefijos remotos o al menos confirmar que el bucket responde sin error de configuracion.
 
 ---
 
@@ -184,19 +190,19 @@ Antes de sincronizar, hacer una prueba con `copy`.
 ### Subir raw-data
 
 ```bash
-rclone copy "data/raw-data" "r2-project:project-data/raw-data" --progress
+rclone copy "D:\data_CDMX\raw-data" "r2-smart-commute:smart-commute-sim-data/data_CDMX/raw-data" --progress
 ```
 
 ### Subir processed-data
 
 ```bash
-rclone copy "data/processed-data" "r2-project:project-data/processed-data" --progress
+rclone copy "D:\data_CDMX\processed-data" "r2-smart-commute:smart-commute-sim-data/data_CDMX/processed-data" --progress
 ```
 
 ### Subir backup
 
 ```bash
-rclone copy "data/backup" "r2-project:project-data/backup" --progress
+rclone copy "D:\data_CDMX\backup" "r2-smart-commute:smart-commute-sim-data/data_CDMX/backup" --progress
 ```
 
 ### Por que usar copy primero
@@ -210,12 +216,18 @@ Porque `copy` NO borra archivos en destino. Eso evita desastres al principio.
 Listar el contenido remoto:
 
 ```bash
-rclone ls "r2-project:project-data/raw-data"
-rclone ls "r2-project:project-data/processed-data"
-rclone ls "r2-project:project-data/backup"
+rclone ls "r2-smart-commute:smart-commute-sim-data/data_CDMX/raw-data"
+rclone ls "r2-smart-commute:smart-commute-sim-data/data_CDMX/processed-data"
+rclone ls "r2-smart-commute:smart-commute-sim-data/data_CDMX/backup"
 ```
 
 Tambien puedes revisar desde el panel web de Cloudflare.
+
+### Estado verificado hoy
+
+- `rclone lsd "r2-smart-commute:smart-commute-sim-data/data_CDMX"` muestra `raw-data`, `processed-data` y `backup`
+- `raw-data/` ya contiene los datasets operativos del proyecto
+- `processed-data/` y `backup/` responden correctamente; hoy contienen archivos de placeholder (`README_processed-data.txt` y `README_backup.txt`)
 
 ---
 
@@ -225,16 +237,35 @@ En el segundo equipo:
 
 1. Instalar `rclone`.
 2. Ejecutar `rclone config`.
-3. Crear otro remote hacia el mismo bucket.
-4. Probar lectura.
+3. Crear el remote `r2-smart-commute` con el mismo endpoint de Cloudflare R2.
+4. Usar credenciales con permiso sobre el bucket `smart-commute-sim-data`.
+5. Probar lectura contra el bucket, no contra la lista global de buckets.
 
 Comando de prueba:
 
 ```bash
-rclone ls "r2-project:project-data/raw-data"
+rclone ls "r2-smart-commute:smart-commute-sim-data/data_CDMX/raw-data"
 ```
 
 Si quieres un acceso mas seguro, crear credenciales distintas por equipo.
+
+### Criterio para dar el Paso 9 por completado
+
+Considera completado este paso en el segundo equipo si se cumplen estas dos validaciones:
+
+```bash
+rclone lsd "r2-smart-commute:smart-commute-sim-data"
+rclone ls "r2-smart-commute:smart-commute-sim-data/data_CDMX/raw-data"
+```
+
+La primera valida acceso al bucket restringido. La segunda valida lectura real de datos.
+
+### Estado actual de este proyecto
+
+- el remote configurado es `r2-smart-commute`
+- las credenciales actuales tienen alcance restringido al bucket `smart-commute-sim-data`
+- la estructura remota observada hoy usa el prefijo raiz `data_CDMX/`
+- por eso `rclone lsd r2-smart-commute:` puede devolver `AccessDenied` aunque el acceso al bucket funcione correctamente
 
 ---
 
@@ -245,7 +276,7 @@ Una vez que confirmes que la estructura y el flujo estan correctos, puedes usar 
 Ejemplo:
 
 ```bash
-rclone sync "data/raw-data" "r2-project:project-data/raw-data" --progress
+rclone sync "D:\data_CDMX\raw-data" "r2-smart-commute:smart-commute-sim-data/data_CDMX/raw-data" --progress
 ```
 
 ### Advertencia critica
@@ -257,6 +288,12 @@ Por eso el orden correcto es:
 1. empezar con `copy`
 2. validar estructura y contenido
 3. usar `sync` solo cuando ya tengas confianza en el proceso
+
+### Recomendacion operativa para este proyecto
+
+Empieza usando `sync` solo para `raw-data/`, porque es el prefijo que hoy tiene carga real y es el mas facil de validar.
+
+`processed-data/` y `backup/` pueden seguir con `copy` hasta que definas una politica de generacion y retencion mas estable.
 
 ---
 
@@ -334,10 +371,10 @@ Esto reduce el riesgo de borrados accidentales.
 
 - [ ] Crear cuenta en Cloudflare
 - [ ] Activar R2
-- [ ] Crear bucket `project-data`
+- [ ] Crear bucket `smart-commute-sim-data`
 - [ ] Crear credenciales S3
 - [ ] Instalar `rclone`
-- [ ] Configurar remote `r2-project`
+- [ ] Configurar remote `r2-smart-commute`
 - [ ] Subir `raw-data` con `copy`
 - [ ] Subir `processed-data` con `copy`
 - [ ] Subir `backup` con `copy`
@@ -367,9 +404,9 @@ R2 cumple bien con eso.
 La mejor implementacion inicial para este proyecto es:
 
 - Cloudflare R2
-- un bucket llamado `project-data`
-- tres prefijos: `raw-data/`, `processed-data/` y `backup/`
-- `rclone` para acceder y sincronizar desde cualquier equipo
+- un bucket llamado `smart-commute-sim-data`
+- un prefijo raiz `data_CDMX/` con tres subprefijos: `raw-data/`, `processed-data/` y `backup/`
+- `rclone` para acceder y sincronizar desde cualquier equipo usando el remote `r2-smart-commute`
 
 Esa decision te da el mejor equilibrio entre simplicidad, costo y crecimiento futuro.
 
@@ -377,45 +414,38 @@ Esa decision te da el mejor equilibrio entre simplicidad, costo y crecimiento fu
 
 ## Comandos de referencia rapida
 
-### Listar buckets
+### Validar acceso al bucket
 
 ```bash
-rclone lsd r2-project:
+rclone lsd "r2-smart-commute:smart-commute-sim-data"
 ```
 
 ### Subir raw-data
 
 ```bash
-rclone copy "data/raw-data" "r2-project:project-data/raw-data" --progress
+rclone copy "D:\data_CDMX\raw-data" "r2-smart-commute:smart-commute-sim-data/data_CDMX/raw-data" --progress
 ```
 
 ### Subir processed-data
 
 ```bash
-rclone copy "data/processed-data" "r2-project:project-data/processed-data" --progress
+rclone copy "D:\data_CDMX\processed-data" "r2-smart-commute:smart-commute-sim-data/data_CDMX/processed-data" --progress
 ```
 
 ### Subir backup
 
 ```bash
-rclone copy "data/backup" "r2-project:project-data/backup" --progress
+rclone copy "D:\data_CDMX\backup" "r2-smart-commute:smart-commute-sim-data/data_CDMX/backup" --progress
 ```
 
 ### Sincronizar raw-data
 
 ```bash
-rclone sync "data/raw-data" "r2-project:project-data/raw-data" --progress
+rclone sync "D:\data_CDMX\raw-data" "r2-smart-commute:smart-commute-sim-data/data_CDMX/raw-data" --progress
 ```
 
 ### Listar archivos remotos
 
 ```bash
-rclone ls "r2-project:project-data/raw-data"
+rclone ls "r2-smart-commute:smart-commute-sim-data/data_CDMX/raw-data"
 ```
-
-###next steps
-1. Te dejo un manifest por source (raw-data/<source>/manifest.json)       
-     para gobernanza de versiones y validación automática.                   
-     2. Te agrego un script de “auditoría de estructura” que falle si        
-     alguien vuelve a dejar archivos sueltos fuera de raw-data/<source>/...  
-     .  

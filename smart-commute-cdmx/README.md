@@ -2,6 +2,14 @@
 
 MVP frontend con `MapLibre + Vite` y un ETL local que genera `public/data/mvp-data.json`.
 
+## Flujo SDD
+
+Para trabajo guiado por SDD en este producto:
+
+- Ejecuta el flujo desde `smart-commute-cdmx/`
+- Usa `smart-commute-cdmx/.atl/skill-registry.md` como registry primario
+- Trata `G:\Repos\claude-impact-lab\.atl\skill-registry.md` solo como registry de workspace, no como fuente para skills especificas de la app
+
 ## Sprint 1 (ETL + contratos de salida)
 
 Se agrego un generador de artefactos para el backlog del PRD (Sprint 1):
