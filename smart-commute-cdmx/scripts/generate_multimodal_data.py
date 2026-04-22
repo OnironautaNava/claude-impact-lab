@@ -1182,6 +1182,7 @@ def build_routes_from_gtfs(stations, gtfs_data):
                     features_by_pair[edge_key] = {
                         "type": "Feature",
                         "properties": {
+                            "source": "gtfs",
                             "mode": mode,
                             "line": line,
                             "variant": variant_key,
@@ -1254,6 +1255,7 @@ def build_routes_from_stations(stations, line_geometries):
                     {
                         "type": "Feature",
                         "properties": {
+                            "source": "cartography-fallback",
                             "mode": mode,
                             "line": line,
                             "variant": variant.get("variantKey", variant_key),
@@ -1447,6 +1449,8 @@ def build_network_diagnostics(stations, routes):
 
     for (mode, line), features in sorted(line_buckets.items()):
         distances = [feature["properties"]["distanceM"] for feature in features]
+        route_sources = {feature["properties"].get("source", "unknown") for feature in features}
+        is_gtfs_line = route_sources == {"gtfs"}
         short_edges = []
         long_edges = []
         for feature in sorted(features, key=lambda item: item["properties"]["distanceM"]):
@@ -1461,7 +1465,7 @@ def build_network_diagnostics(stations, routes):
             }
             if should_skip_short_edge(from_station, to_station, mode, props["distanceM"]):
                 short_edges.append(record)
-            if props["distanceM"] > line_distance_limit(mode, distances):
+            if not is_gtfs_line and props["distanceM"] > line_distance_limit(mode, distances):
                 long_edges.append(record)
 
         line_stations = [station for station in stations if station["mode"] == mode and line in station["lines"]]
@@ -1470,7 +1474,7 @@ def build_network_diagnostics(stations, routes):
         for station in line_stations:
             by_name[normalize_text(station["name"])].append(station)
 
-        duplicate_threshold = DEDUP_DISTANCE_BY_MODE.get(mode, 50) * 2
+        duplicate_threshold = DEDUP_DISTANCE_BY_MODE.get(mode, 50)
         for name_key, named_stations in by_name.items():
             if len(named_stations) < 2:
                 continue
@@ -1491,7 +1495,8 @@ def build_network_diagnostics(stations, routes):
                 }
             )
 
-        suspicious_score = len(short_edges) + len(long_edges) + len(duplicate_groups)
+        duplicate_signal = 0 if is_gtfs_line else len(duplicate_groups)
+        suspicious_score = len(short_edges) + len(long_edges) + duplicate_signal
         if suspicious_score == 0:
             continue
 
@@ -1501,9 +1506,10 @@ def build_network_diagnostics(stations, routes):
                 "line": line,
                 "stationCount": len(line_stations),
                 "edgeCount": len(features),
+                "routeSources": sorted(route_sources),
                 "medianDistanceM": round(statistics.median(distances)) if distances else 0,
                 "maxDistanceM": max(distances) if distances else 0,
-                "duplicateStationNames": sorted(duplicate_groups, key=lambda item: (-item["count"], item["minDistanceM"], item["name"]))[:12],
+                "duplicateStationNames": [] if is_gtfs_line else sorted(duplicate_groups, key=lambda item: (-item["count"], item["minDistanceM"], item["name"]))[:12],
                 "shortEdges": short_edges[:12],
                 "longEdges": sorted(long_edges, key=lambda item: item["distanceM"], reverse=True)[:12],
             }
