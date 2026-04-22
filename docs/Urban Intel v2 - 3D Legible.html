@@ -1,0 +1,923 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<title>Smart Commute Simulator — v2 · 3D Legible</title>
+<meta name="viewport" content="width=1440" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* deeper dark with slight blue tint — feels urban, nocturnal */
+    --bg:        #0A0E1A;
+    --bg-panel:  #121828;
+    --bg-elev:   #1A2236;
+    --ink:       #F5F8FC;
+    --ink-2:     #C3CDE0;
+    --ink-dim:   #7C8AA8;
+    --ink-mute:  #4A556E;
+    --line:      rgba(255,255,255,0.08);
+    --line-2:    rgba(255,255,255,0.05);
+
+    --cyan:      #22D3EE;
+    --amber:     #F59E0B;
+    --red:       #F43F5E;
+    --green:     #10D96B;
+    --orange:    #FB7F3B;
+
+    --L1:  #E91E63;
+    --L2:  #2196F3;
+    --L3:  #A5B925;
+    --L9:  #00BFA5;
+    --L5:  #FFD54F;
+    --LA:  #8E24AA;
+    --MB:  #C0282D;
+  }
+  html, body { background: var(--bg); color: var(--ink); margin:0; }
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .f-display { font-family: 'Space Grotesk', sans-serif; letter-spacing: -0.01em; }
+  .f-mono    { font-family: 'Space Mono', ui-monospace, monospace; }
+
+  #app { width: 1440px; height: 900px; position: relative; overflow: hidden; background: var(--bg); }
+
+  /* Panels — solid-ish for legibility (no aggressive blur) */
+  .panel {
+    background: linear-gradient(180deg, rgba(24,30,48,0.96), rgba(14,18,30,0.96));
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: 0 24px 48px -20px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.02) inset;
+  }
+  .panel-flat {
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+  }
+  .tile {
+    background: rgba(255,255,255,0.025);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+  .pill {
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  /* Glow helpers */
+  .glow-red   { box-shadow: 0 0 18px rgba(244,63,94,0.55), 0 0 2px rgba(244,63,94,1); }
+  .glow-amber { box-shadow: 0 0 14px rgba(245,158,11,0.55); }
+  .glow-green { box-shadow: 0 0 14px rgba(16,217,107,0.55); }
+  .glow-cyan  { box-shadow: 0 0 14px rgba(34,211,238,0.55); }
+
+  /* Pulses */
+  @keyframes pulseRing {
+    0%   { transform: scale(0.5); opacity: 0.9; }
+    100% { transform: scale(2.6); opacity: 0; }
+  }
+  .pulse-ring {
+    animation: pulseRing 2.2s cubic-bezier(0.22, 0.61, 0.36, 1) infinite;
+    transform-origin: center;
+  }
+  @keyframes impactPulse {
+    0%,100% { opacity: 0.55; }
+    50%     { opacity: 0.85; }
+  }
+  .impact-pulse { animation: impactPulse 3.6s ease-in-out infinite; }
+  @keyframes blinkDot { 0%,100% { opacity:1 } 50% { opacity:0.25 } }
+  .blink { animation: blinkDot 1.4s ease-in-out infinite; }
+  @keyframes trail { to { stroke-dashoffset: -180; } }
+  .metro-trail { stroke-dasharray: 2 18; animation: trail 4s linear infinite; }
+  @keyframes dash { to { stroke-dashoffset: -30; } }
+  .road-dash { stroke-dasharray: 5 6; animation: dash 2s linear infinite; }
+
+  /* 3D perspective container — we'll fake the iso view using CSS transform */
+  .stage-3d {
+    perspective: 1600px;
+    perspective-origin: 50% 30%;
+  }
+  .plane-3d {
+    transform-style: preserve-3d;
+    transform: rotateX(58deg) rotateZ(-18deg) scale(1.35);
+    transform-origin: 50% 50%;
+  }
+
+  /* Building block — a colored top with darker faces */
+  .bldg {
+    position: absolute;
+    transform-style: preserve-3d;
+  }
+  .bldg .top {
+    position: absolute; inset: 0;
+    background: var(--top-color, #273252);
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .bldg .side-e, .bldg .side-s {
+    position: absolute;
+    background: var(--side-color, #171D2E);
+  }
+  .bldg .side-e {
+    top:0; right:0;
+    width: var(--h, 8px); height: 100%;
+    transform-origin: left center;
+    transform: rotateY(-90deg) translateX(0);
+  }
+
+  /* Scrollbar */
+  .thin-scroll::-webkit-scrollbar { width: 6px; }
+  .thin-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 6px; }
+  .thin-scroll::-webkit-scrollbar-track { background: transparent; }
+
+  /* Nice focus styles */
+  button, [role="button"] { outline: none; }
+
+  /* Toggle switch (big/legible) */
+  .switch {
+    position: relative; display:inline-block;
+    width: 54px; height: 28px;
+    background: rgba(244,63,94,0.2);
+    border: 1px solid rgba(244,63,94,0.6);
+    border-radius: 999px;
+    transition: all .25s ease;
+  }
+  .switch::after {
+    content:""; position:absolute; top:3px; right:3px;
+    width: 20px; height: 20px; border-radius: 999px;
+    background: #F43F5E;
+    box-shadow: 0 0 10px rgba(244,63,94,0.8);
+    transition: all .25s ease;
+  }
+
+  /* High-contrast big numbers */
+  .big-num {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* crisp dashed horizon */
+  .horizon {
+    background-image: linear-gradient(to bottom, rgba(34,211,238,0.18), transparent 80%);
+  }
+</style>
+</head>
+<body>
+  <div id="app"></div>
+  <script type="text/babel" data-presets="react">
+  const { useState, useMemo } = React;
+
+  // ============ ISO 3D MAP ============
+  // We fake an isometric 3D city on CSS transforms. Buildings are divs positioned in a
+  // 2D plane that is then rotated in 3D. Metro lines, roads, impact radius are SVG
+  // living on the same plane.
+
+  // Deterministic pseudo-random so layout is stable
+  function mulberry32(seed) {
+    return function() {
+      let t = seed += 0x6D2B79F5;
+      t = Math.imul(t ^ t >>> 15, t | 1);
+      t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+
+  function Buildings() {
+    const rand = mulberry32(7);
+    const blocks = [];
+    // tight city grid 1600x1000 "plane"
+    const cols = 18, rows = 12;
+    const cellW = 90, cellH = 82;
+    const originX = -160, originY = -120;
+
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        // skip some cells for streets/parks
+        if ((r === 4 && c > 6 && c < 10) || (r === 7)) continue;
+        // park / plaza holes
+        if (r === 5 && c === 8) continue;
+        if (r === 6 && c === 3) continue;
+
+        const per = rand();
+        const sub = Math.floor(per*3)+1; // 1..3 subdivisions
+        for (let s = 0; s < sub; s++) {
+          const subW = cellW / sub - 6;
+          const w = subW * (0.7 + rand()*0.3);
+          const h = cellH * (0.65 + rand()*0.3);
+          const x = originX + c*cellW + s*(cellW/sub) + 3;
+          const y = originY + r*cellH + 4;
+          const height = Math.max(4, Math.floor(rand()*46) + 4);
+          // near the closure radius -> taller
+          const cx = x + w/2, cy = y + h/2;
+          const dx = cx - (originX + 11*cellW), dy = cy - (originY + 5*cellH);
+          const distToCore = Math.sqrt(dx*dx + dy*dy);
+          const isCore = distToCore < 200;
+          const H = isCore ? height + Math.floor(rand()*40) : height;
+
+          // color tones
+          const hueShift = rand();
+          let topColor, sideColor;
+          if (hueShift < 0.25) { topColor = "#2A3554"; sideColor = "#141A2C"; }
+          else if (hueShift < 0.55) { topColor = "#1F2942"; sideColor = "#0F1424"; }
+          else if (hueShift < 0.85) { topColor = "#263352"; sideColor = "#131A2D"; }
+          else { topColor = "#334670"; sideColor = "#1A2238"; }
+
+          // zone tint by "danger"
+          const inDanger = Math.sqrt(dx*dx + dy*dy) < 260;
+          if (inDanger) {
+            topColor = "#3D2230";
+            sideColor = "#1E0F19";
+          }
+
+          blocks.push({ x, y, w, h, H, topColor, sideColor, key: `${r}-${c}-${s}` });
+        }
+      }
+    }
+    return blocks.map(b => (
+      <div key={b.key} className="bldg" style={{
+        left: b.x, top: b.y, width: b.w, height: b.h,
+        transform: `translateZ(${b.H}px)`,
+        "--top-color": b.topColor,
+        "--side-color": b.sideColor,
+      }}>
+        {/* top */}
+        <div className="top" />
+        {/* east face */}
+        <div style={{
+          position: "absolute", top: 0, right: 0, width: b.H, height: b.h,
+          background: b.sideColor,
+          transform: `rotateY(-90deg) translateX(0) translateZ(0)`,
+          transformOrigin: "right top",
+        }}/>
+        {/* south face */}
+        <div style={{
+          position: "absolute", bottom: 0, left: 0, width: b.w, height: b.H,
+          background: `linear-gradient(to bottom, ${b.topColor}AA, ${b.sideColor})`,
+          transform: `rotateX(-90deg) translateY(0) translateZ(0)`,
+          transformOrigin: "left bottom",
+        }}/>
+      </div>
+    ));
+  }
+
+  // Metro path definitions in "plane" coordinates (origin top-left same as blocks)
+  const L1_PATH  = "M -140 420 Q 120 390 420 410 T 900 420 T 1460 440";
+  const L2_PATH  = "M 120 760 Q 260 620 420 520 T 760 340 T 1200 180";
+  const L3_PATH  = "M 740 -80 Q 740 200 720 420 T 700 780";
+  const L9_PATH  = "M -100 600 Q 220 580 520 600 T 1280 640";
+  const ROAD1    = "M 300 680 Q 560 650 860 690 T 1300 720";
+  const ROAD2    = "M 200 340 L 520 380 L 560 540";
+
+  // Closure center (Pantitlán) in plane coords
+  const CLOSURE = { x: 1000, y: 410 };
+
+  function MetroSVG() {
+    return (
+      <svg className="absolute" style={{
+        left: -200, top: -160, width: 1800, height: 1200,
+        overflow: "visible", pointerEvents: "none",
+      }} viewBox="-200 -160 1800 1200">
+        <defs>
+          <radialGradient id="impactGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#F43F5E" stopOpacity="0.55"/>
+            <stop offset="55%" stopColor="#F43F5E" stopOpacity="0.18"/>
+            <stop offset="100%" stopColor="#F43F5E" stopOpacity="0"/>
+          </radialGradient>
+          <filter id="lg" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="4" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+
+        {/* street grid hint */}
+        <g stroke="rgba(180,200,235,0.08)" strokeWidth="1" fill="none">
+          {Array.from({length:20}).map((_,i)=>(
+            <line key={`h${i}`} x1="-200" y1={i*56} x2="1600" y2={i*56}/>
+          ))}
+          {Array.from({length:24}).map((_,i)=>(
+            <line key={`v${i}`} x1={i*70-200} y1="-160" x2={i*70-200} y2="1040"/>
+          ))}
+        </g>
+
+        {/* parks */}
+        <g>
+          <ellipse cx="640" cy="420" rx="120" ry="60" fill="#12351F" opacity="0.65"/>
+          <ellipse cx="280" cy="560" rx="70" ry="40" fill="#12351F" opacity="0.55"/>
+        </g>
+
+        {/* roads closed (amber dashed) */}
+        <g fill="none" stroke="#F59E0B" strokeWidth="4" filter="url(#lg)" className="road-dash" opacity="0.95">
+          <path d={ROAD1}/>
+          <path d={ROAD2}/>
+        </g>
+
+        {/* metro trails */}
+        <g filter="url(#lg)">
+          <path d={L1_PATH} fill="none" stroke="#E91E63" strokeWidth="5" strokeLinecap="round" opacity="0.9"/>
+          <path d={L1_PATH} fill="none" stroke="#FFFFFF" strokeWidth="1.5" className="metro-trail" opacity="0.7"/>
+        </g>
+        <g filter="url(#lg)">
+          <path d={L2_PATH} fill="none" stroke="#2196F3" strokeWidth="5" strokeLinecap="round" opacity="0.9"/>
+          <path d={L2_PATH} fill="none" stroke="#FFFFFF" strokeWidth="1.5" className="metro-trail" opacity="0.65"/>
+        </g>
+        <g filter="url(#lg)">
+          <path d={L3_PATH} fill="none" stroke="#A5B925" strokeWidth="5" strokeLinecap="round" opacity="0.9"/>
+          <path d={L3_PATH} fill="none" stroke="#FFFFFF" strokeWidth="1.5" className="metro-trail" opacity="0.6"/>
+        </g>
+        <g filter="url(#lg)">
+          <path d={L9_PATH} fill="none" stroke="#00BFA5" strokeWidth="4" strokeLinecap="round" opacity="0.85"/>
+        </g>
+
+        {/* Impact radius */}
+        <g transform={`translate(${CLOSURE.x}, ${CLOSURE.y})`} className="impact-pulse">
+          <circle r="260" fill="url(#impactGrad)"/>
+          <circle r="260" fill="none" stroke="#F43F5E" strokeWidth="1.5" opacity="0.4" strokeDasharray="4 8"/>
+          <circle r="180" fill="none" stroke="#F43F5E" strokeWidth="1" opacity="0.3" strokeDasharray="3 6"/>
+          <circle r="110" fill="none" stroke="#F43F5E" strokeWidth="1" opacity="0.35" strokeDasharray="3 6"/>
+        </g>
+      </svg>
+    );
+  }
+
+  // Station pin sitting on the 3D plane (counter-rotated so it faces the camera)
+  function PinOnPlane({ x, y, color, label, line, status, selected }) {
+    const closed = status === "closed";
+    const warning = status === "warning";
+    return (
+      <div className="absolute" style={{
+        left: x, top: y,
+        transform: "translate(-50%, -50%) translateZ(70px)",
+        transformStyle: "preserve-3d",
+      }}>
+        {/* vertical stem (billboard) */}
+        <div style={{
+          position: "absolute", left: "50%", top: 0,
+          transform: "translateX(-50%) rotateX(-58deg) rotateZ(18deg)",
+          transformOrigin: "bottom center",
+        }}>
+          <div style={{
+            width: 2, height: 40,
+            background: `linear-gradient(to bottom, ${closed?"#F43F5E":warning?"#F59E0B":color}, transparent)`,
+            boxShadow: `0 0 8px ${closed?"#F43F5E":color}`,
+          }}/>
+        </div>
+        {/* the pin/label counter-rotated to face the camera */}
+        <div style={{
+          position: "absolute", left: "50%", top: -64,
+          transform: "translateX(-50%) rotateZ(18deg) rotateX(-58deg)",
+          transformOrigin: "bottom center",
+        }}>
+          {closed && (
+            <>
+              <span className="absolute rounded-full pulse-ring" style={{
+                left: "50%", top: "50%",
+                width: 32, height: 32, marginLeft: -16, marginTop: -16,
+                border: `2px solid ${color}`,
+              }}/>
+              <span className="absolute rounded-full pulse-ring" style={{
+                left: "50%", top: "50%",
+                width: 32, height: 32, marginLeft: -16, marginTop: -16,
+                border: `2px solid ${color}`,
+                animationDelay: "0.9s",
+              }}/>
+            </>
+          )}
+          <div className={`relative rounded-full flex items-center justify-center mx-auto ${closed?"glow-red":warning?"glow-amber":""}`}
+            style={{
+              width: 22, height: 22,
+              background: closed ? "#F43F5E" : warning ? "#F59E0B" : color,
+              border: `2px solid #0A0E1A`,
+              boxShadow: `0 0 0 2px ${closed?"#F43F5E":color}`,
+            }}>
+            <span className="block rounded-full" style={{ width: 6, height: 6, background: "#0A0E1A" }}/>
+          </div>
+          {selected && (
+            <span className="absolute rounded-full" style={{
+              left:"50%", top:"50%", width:44, height:44, marginLeft:-22, marginTop:-22,
+              border:"1.5px solid #22D3EE", boxShadow:"0 0 14px rgba(34,211,238,0.55)",
+            }}/>
+          )}
+          <div className="whitespace-nowrap text-center mt-1.5">
+            <div className={`font-bold text-[13px] ${closed?"text-[#F43F5E]":warning?"text-[#F59E0B]":"text-white"}`}
+                 style={{ textShadow: "0 1px 4px rgba(0,0,0,0.8)" }}>
+              {label}
+            </div>
+            <div className="text-[10px] f-mono mt-0.5" style={{ color: color, textShadow: "0 1px 3px rgba(0,0,0,0.9)" }}>
+              {line} · {closed?"CERRADA":warning?"AVISO":"OK"}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  function Map3D() {
+    const stations = [
+      { x: 400,  y: 410, color: "#E91E63", label: "Observatorio",   line: "L1",       status: "ok" },
+      { x: 640,  y: 415, color: "#E91E63", label: "Insurgentes",    line: "L1",       status: "ok" },
+      { x: 820,  y: 418, color: "#E91E63", label: "Balderas",       line: "L1",       status: "warning" },
+      { x: 1000, y: 410, color: "#E91E63", label: "Pantitlán",      line: "L1/5/9/A", status: "closed", selected: true },
+      { x: 720,  y: 200, color: "#A5B925", label: "Hidalgo",        line: "L3",       status: "ok" },
+      { x: 700,  y: 640, color: "#A5B925", label: "Ermita",         line: "L3",       status: "ok" },
+      { x: 900,  y: 310, color: "#2196F3", label: "Bellas Artes",   line: "L2",       status: "ok" },
+      { x: 380,  y: 620, color: "#2196F3", label: "Tasqueña",       line: "L2",       status: "closed" },
+      { x: 1140, y: 200, color: "#2196F3", label: "Cuatro Caminos", line: "L2",       status: "ok" },
+      { x: 520,  y: 600, color: "#00BFA5", label: "Centro Médico",  line: "L9",       status: "ok" },
+    ];
+
+    return (
+      <div className="absolute inset-0 overflow-hidden" style={{
+        background:
+          "radial-gradient(1400px 900px at 55% 20%, #14203B 0%, #0A1024 55%, #05060F 100%)",
+      }}>
+        {/* sky horizon */}
+        <div className="absolute left-0 right-0 top-0 h-[240px] horizon pointer-events-none"/>
+
+        {/* ambient city glow on far-ground */}
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: "radial-gradient(600px 320px at 72% 36%, rgba(244,63,94,0.18), transparent 60%)",
+        }}/>
+
+        {/* 3D stage */}
+        <div className="absolute inset-0 stage-3d">
+          <div className="absolute left-1/2 top-1/2 plane-3d" style={{
+            width: 1600, height: 1000, marginLeft: -800, marginTop: -500,
+          }}>
+            {/* ground plate */}
+            <div className="absolute" style={{
+              left: -200, top: -160, width: 1800, height: 1200,
+              background: "linear-gradient(180deg, #0C1222 0%, #080B17 100%)",
+              boxShadow: "inset 0 0 180px rgba(0,0,0,0.6)",
+            }}/>
+
+            {/* metro & overlays */}
+            <MetroSVG/>
+
+            {/* Buildings extruded */}
+            <Buildings/>
+
+            {/* Station pins — not on plane (we position them on plane but counter-rotate inside) */}
+            {stations.map((s, i) => (
+              <PinOnPlane key={i} {...s}/>
+            ))}
+          </div>
+        </div>
+
+        {/* vignette */}
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: "radial-gradient(ellipse at center, rgba(0,0,0,0) 40%, rgba(0,0,0,0.55) 90%)",
+        }}/>
+      </div>
+    );
+  }
+
+  // ============ UI COMPONENTS ============
+  function Header() {
+    return (
+      <header className="absolute top-0 left-0 right-0 z-30 px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-xl flex items-center justify-center"
+               style={{ background: "linear-gradient(135deg, #22D3EE, #6366F1)", boxShadow: "0 8px 24px rgba(34,211,238,0.35)" }}>
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#0A0E1A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 12h4l2-8 4 16 2-8h6"/>
+            </svg>
+          </div>
+          <div className="leading-tight">
+            <div className="f-display text-[22px] font-bold text-white">Smart Commute <span className="text-[#22D3EE]">CDMX</span></div>
+            <div className="text-[12px] text-[#7C8AA8]">Simulador de impacto en movilidad · Ciudad de México</div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <div className="panel-flat px-3 py-2 rounded-lg flex items-center gap-3">
+            <Legend color="#F43F5E" label="Cierre transporte" n="2"/>
+            <span className="w-px h-3 bg-white/10"/>
+            <Legend color="#F59E0B" label="Cierre vial" n="2"/>
+            <span className="w-px h-3 bg-white/10"/>
+            <Legend color="#10D96B" label="OK" n="184"/>
+          </div>
+          <button className="panel-flat px-3 py-2 rounded-lg text-[13px] text-[#C3CDE0] hover:text-white flex items-center gap-2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4v6h6M20 20v-6h-6"/><path d="M20 10a8 8 0 0 0-15-3M4 14a8 8 0 0 0 15 3"/></svg>
+            Limpiar
+          </button>
+          <button className="px-3 py-2 rounded-lg text-[13px] font-semibold text-[#0A0E1A] flex items-center gap-2"
+                  style={{ background: "#22D3EE", boxShadow: "0 6px 18px rgba(34,211,238,0.35)" }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
+            Nuevo escenario
+          </button>
+        </div>
+      </header>
+    );
+  }
+
+  function Legend({ color, label, n }) {
+    return (
+      <div className="flex items-center gap-1.5">
+        <span className="w-2 h-2 rounded-full" style={{ background: color, boxShadow: `0 0 8px ${color}` }}/>
+        <span className="text-[12px] text-white">{label}</span>
+        <span className="text-[11px] text-[#7C8AA8] f-mono">{n}</span>
+      </div>
+    );
+  }
+
+  // ============ LEFT SIDEBAR — SCENARIO SUMMARY ONLY ============
+  function Sidebar() {
+    return (
+      <aside className="absolute top-[92px] left-6 bottom-6 z-20 w-[360px] panel overflow-y-auto thin-scroll">
+        {/* Scenario header */}
+        <div className="px-5 pt-5 pb-4 border-b" style={{ borderColor: "var(--line)" }}>
+          <div className="flex items-center justify-between">
+            <div className="text-[11px] text-[#22D3EE] font-semibold uppercase tracking-widest">Escenario activo</div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#F43F5E] blink"/>
+              <span className="text-[11px] text-[#F43F5E] font-semibold">EN VIVO</span>
+            </div>
+          </div>
+          <h1 className="f-display text-[26px] font-bold text-white leading-tight mt-2">SCN‑0317 · Cierre L1</h1>
+          <div className="text-[13px] text-[#C3CDE0] mt-1">Pantitlán fuera de servicio · simulación 08:42</div>
+        </div>
+
+        {/* Primary options */}
+        <div className="px-5 py-4 border-b" style={{ borderColor: "var(--line)" }}>
+          <div className="text-[11px] font-semibold text-[#C3CDE0] uppercase tracking-wider mb-2">Opciones</div>
+          <div className="space-y-1.5">
+            <OptionRow icon="plus" label="Nuevo cierre" hint="Seleccionar nodo en mapa"/>
+            <OptionRow icon="road" label="Cierre vial" hint="Dibujar segmento"/>
+            <OptionRow icon="clock" label="Hora del día" hint="08:42 · hora pico"/>
+            <OptionRow icon="save" label="Guardar escenario" hint="↣ exportar"/>
+          </div>
+        </div>
+
+        {/* Global impact */}
+        <div className="px-5 pt-4 pb-3">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <div className="text-[11px] text-[#22D3EE] font-semibold uppercase tracking-widest">Resumen</div>
+              <div className="text-[17px] font-bold text-white mt-0.5">Impacto total</div>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#10D96B] blink"/>
+              <span className="text-[10px] text-[#7C8AA8]">hace 4 s</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <div>
+              <div className="text-[10px] text-[#7C8AA8] uppercase tracking-wider">Personas afectadas</div>
+              <div className="big-num text-[32px] text-white leading-none mt-1">663,093</div>
+              <div className="text-[10px] text-[#7C8AA8] mt-1">≈ 7.2% diarios</div>
+            </div>
+            <div>
+              <div className="text-[10px] text-[#7C8AA8] uppercase tracking-wider">Retraso prom.</div>
+              <div className="big-num text-[32px] text-[#F59E0B] leading-none mt-1">25.9%</div>
+              <div className="text-[10px] text-[#7C8AA8] mt-1">+8.3 min</div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 mb-3">
+            <StatRow label="Transporte cerrado" value="2" total="12" color="#F43F5E"/>
+            <StatRow label="Vías cerradas"      value="2" total="48" color="#F59E0B"/>
+          </div>
+
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-semibold text-[#C3CDE0] uppercase tracking-wider">Impacto por alcaldía</span>
+            <span className="text-[10px] text-[#7C8AA8]">norm.</span>
+          </div>
+          <BoroughBars/>
+        </div>
+      </aside>
+    );
+  }
+
+  function OptionRow({ icon, label, hint }) {
+    const icons = {
+      plus: <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>,
+      road: <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M8 3v18M16 3v18"/><path d="M12 5v2M12 11v2M12 17v2"/></svg>,
+      clock:<svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>,
+      save: <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M5 3h11l3 3v15H5zM8 3v6h8V3M8 13h8v8H8z"/></svg>,
+    };
+    return (
+      <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/[0.04] text-left tile">
+        <span className="text-[#22D3EE]">{icons[icon]}</span>
+        <div className="flex-1">
+          <div className="text-[13px] text-white font-medium">{label}</div>
+          <div className="text-[10.5px] text-[#7C8AA8]">{hint}</div>
+        </div>
+        <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" className="text-[#7C8AA8]"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+    );
+  }
+
+  // ============ NODE INFO POPUP (right) — selected node ============
+  function NodePopup({ onClose }) {
+    return (
+      <aside className="absolute top-[92px] right-6 z-20 w-[330px] max-h-[calc(900px-92px-24px)] panel overflow-hidden flex flex-col">
+        {/* head */}
+        <div className="px-4 pt-4 pb-3 border-b flex items-start gap-2" style={{ borderColor: "var(--line)" }}>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="pill" style={{ background: "rgba(244,63,94,0.15)", border: "1px solid rgba(244,63,94,0.45)", color: "#FCA5B5" }}>METRO</span>
+              <span className="pill" style={{ background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.4)", color: "#FDBA74" }}>Intercambio</span>
+            </div>
+            <h2 className="f-display text-[28px] font-bold text-white leading-tight mt-2">Pantitlán</h2>
+            <div className="text-[12px] text-[#C3CDE0] mt-0.5">Terminal · Iztacalco / V. Carranza</div>
+            <div className="flex items-center gap-1.5 mt-2">
+              {[["L1","#E91E63"],["L5","#FFD54F"],["L9","#00BFA5"],["LA","#8E24AA"]].map(([l,c])=>(
+                <span key={l} className="pill" style={{ color: c, border: `1px solid ${c}66`, background: `${c}1A` }}>{l}</span>
+              ))}
+            </div>
+          </div>
+          <button onClick={onClose} className="w-7 h-7 rounded-lg flex items-center justify-center text-[#7C8AA8] hover:text-white hover:bg-white/[0.06]" title="Cerrar">
+            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6l-12 12"/></svg>
+          </button>
+        </div>
+
+        {/* scrollable body */}
+        <div className="flex-1 overflow-y-auto thin-scroll">
+          {/* closure toggle */}
+          <div className="px-4 py-3 flex items-center justify-between"
+               style={{ background: "rgba(244,63,94,0.06)", borderBottom: "1px solid var(--line)" }}>
+            <div>
+              <div className="text-[10px] text-[#7C8AA8] uppercase tracking-wider">Estado del cierre</div>
+              <div className="text-[15px] font-bold text-white mt-0.5">Activo</div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-[#F43F5E] font-semibold">ON</span>
+              <span className="switch"/>
+            </div>
+          </div>
+
+          {/* metrics */}
+          <div className="p-3 grid grid-cols-2 gap-2">
+            <BigMetric
+              icon={<svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M5 21c0-4 3-7 7-7s7 3 7 7"/></svg>}
+              color="#F43F5E" label="Personas" value="331,228" sub="+12.4k / hora"
+            />
+            <BigMetric
+              icon={<svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>}
+              color="#F59E0B" label="Retraso" value="~32%" sub="+8 min"
+            />
+            <BigMetric
+              icon={<svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M4 20l5-5 4 4 7-9"/></svg>}
+              color="#22D3EE" label="Alternativa" value="Zaragoza" sub="L9 · 850 m"
+            />
+            <BigMetric
+              icon={<svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 3l10 18H2L12 3z"/></svg>}
+              color="#FB7F3B" label="Vulnerables" value="42,000" sub="13% de la zona"
+            />
+          </div>
+
+          {/* services */}
+          <div className="px-3 pb-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-semibold text-[#C3CDE0] uppercase tracking-wider">Servicios · 2.4 km</span>
+              <span className="text-[10px] text-[#7C8AA8] f-mono">170</span>
+            </div>
+            <div className="grid grid-cols-4 gap-1.5">
+              {[["Escuelas","38","#F59E0B"],["Hospitales","6","#F43F5E"],["Mercados","14","#22D3EE"],["Paradas","112","#10D96B"]].map(([n,v,c])=>(
+                <div key={n} className="tile px-1.5 py-2 text-center">
+                  <div className="text-[9px] font-semibold tracking-wide" style={{ color: c }}>{n}</div>
+                  <div className="text-[16px] font-bold text-white mt-0.5 big-num">{v}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* routes */}
+          <div className="px-3 pb-3">
+            <div className="text-[10px] font-semibold text-[#C3CDE0] uppercase tracking-wider mb-1.5">Rutas impactadas</div>
+            <div className="flex flex-wrap gap-1.5">
+              {["L1 Observatorio – Pantitlán","L5 Politécnico – Pantitlán","L9 Tacubaya – Pantitlán","LA Pantitlán – La Paz"].map((r,i)=>(
+                <span key={i} className="pill" style={{ background: "rgba(34,211,238,0.08)", border: "1px solid rgba(34,211,238,0.3)", color: "#A5F3FC" }}>{r}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* actions */}
+          <div className="px-3 pb-4 flex gap-2">
+            <button className="flex-1 px-3 py-2 rounded-lg text-[12px] font-semibold text-[#0A0E1A]"
+                    style={{ background: "#22D3EE", boxShadow: "0 4px 14px rgba(34,211,238,0.35)" }}>
+              Ver reporte
+            </button>
+            <button className="flex-1 px-3 py-2 rounded-lg text-[12px] text-[#C3CDE0] tile hover:text-white">
+              Reabrir estación
+            </button>
+          </div>
+        </div>
+      </aside>
+    );
+  }
+
+  function BigMetric({ icon, color, label, value, sub }) {
+    return (
+      <div className="tile p-3">
+        <div className="flex items-center gap-2 mb-1">
+          <span style={{ color }}>{icon}</span>
+          <span className="text-[11px] text-[#C3CDE0] font-medium">{label}</span>
+        </div>
+        <div className="big-num text-[24px] leading-none mt-1" style={{ color }}>{value}</div>
+        <div className="text-[11px] text-[#7C8AA8] mt-1">{sub}</div>
+      </div>
+    );
+  }
+
+
+
+  function StatRow({ label, value, total, color }) {
+    const pct = parseInt(value) / parseInt(total);
+    return (
+      <div className="tile p-3">
+        <div className="flex items-end justify-between mb-2">
+          <span className="text-[11px] text-[#7C8AA8] font-semibold uppercase tracking-wider">{label}</span>
+          <span className="f-mono text-[12px] text-white">
+            <span className="text-[16px] font-bold">{value}</span>
+            <span className="text-[#7C8AA8]">/{total}</span>
+          </span>
+        </div>
+        <div className="h-[4px] rounded-full bg-white/5 overflow-hidden">
+          <div className="h-full rounded-full" style={{ width: `${Math.max(6, pct*100)}%`, background: color, boxShadow: `0 0 10px ${color}` }}/>
+        </div>
+      </div>
+    );
+  }
+
+  function BoroughBars() {
+    const rows = [
+      ["Iztacalco",       0.92, "#F43F5E"],
+      ["Venustiano C.",   0.78, "#F43F5E"],
+      ["Nezahualcóyotl",  0.64, "#F59E0B"],
+      ["Iztapalapa",      0.48, "#F59E0B"],
+      ["Cuauhtémoc",      0.32, "#22D3EE"],
+    ];
+    return (
+      <div className="space-y-2">
+        {rows.map(([name, v, c])=>(
+          <div key={name} className="flex items-center gap-3">
+            <div className="w-[148px] text-[12px] text-white/90 truncate">{name}</div>
+            <div className="flex-1 h-[8px] rounded-full bg-white/5 relative overflow-hidden">
+              <div className="h-full rounded-full" style={{ width:`${v*100}%`, background: c, boxShadow:`0 0 10px ${c}` }}/>
+            </div>
+            <div className="w-10 text-right big-num text-[13px]" style={{ color: c }}>{Math.round(v*100)}%</div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // ============ LAYERS + 3D CONTROLS ============
+  function LayersPanel() {
+    const [layers, setLayers] = useState({
+      metro: true, metrobus: true, trolebus: false, trenligero: false,
+      roads: true, population: true, vulnerable: true,
+    });
+    const toggle = (k) => setLayers(l => ({ ...l, [k]: !l[k] }));
+
+    const transitItems = [
+      { k:"metro",     label:"Metro",         meta:"12 líneas · 195 est." },
+      { k:"metrobus",  label:"Metrobús",      meta:"7 corredores" },
+      { k:"trolebus",  label:"Trolebús",      meta:"10 líneas" },
+      { k:"trenligero",label:"Tren Ligero",   meta:"Xochimilco–TAX" },
+    ];
+    const dataItems = [
+      { k:"roads",      label:"Vías primarias", meta:"48 ejes viales" },
+      { k:"population", label:"Población",      meta:"INEGI 2024" },
+      { k:"vulnerable", label:"Vulnerabilidad", meta:"índice SEDESO" },
+    ];
+
+    const [open, setOpen] = useState(false);
+    const activeCount = Object.values(layers).filter(Boolean).length;
+
+    return (
+      <div className="absolute bottom-6 left-[410px] z-20">
+        {open && (
+          <div className="panel overflow-hidden w-[260px] mb-2" style={{ animation: "none" }}>
+            <div className="px-4 pt-4 pb-2 flex items-center justify-between border-b" style={{ borderColor:"var(--line)" }}>
+              <div className="text-[11px] text-[#22D3EE] font-semibold uppercase tracking-widest">Capas del mapa</div>
+              <button onClick={()=>setOpen(false)} className="text-[#7C8AA8] hover:text-white">
+                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6l-12 12"/></svg>
+              </button>
+            </div>
+            <div className="px-3 py-3">
+              <div className="text-[10px] text-[#7C8AA8] font-semibold uppercase tracking-widest px-1 mb-1.5">Transporte</div>
+              {transitItems.map(it => (
+                <LayerRow key={it.k} label={it.label} meta={it.meta} on={layers[it.k]} onClick={()=>toggle(it.k)} color="#22D3EE"/>
+              ))}
+              <div className="text-[10px] text-[#7C8AA8] font-semibold uppercase tracking-widest px-1 mt-3 mb-1.5">Datos</div>
+              {dataItems.map(it => (
+                <LayerRow key={it.k} label={it.label} meta={it.meta} on={layers[it.k]} onClick={()=>toggle(it.k)} color="#F59E0B"/>
+              ))}
+            </div>
+          </div>
+        )}
+        <button onClick={()=>setOpen(o=>!o)}
+                className="panel px-4 py-2.5 rounded-xl flex items-center gap-2.5 hover:border-white/20">
+          <svg width="16" height="16" fill="none" stroke="#22D3EE" strokeWidth="2" viewBox="0 0 24 24">
+            <path d="M12 2l10 6-10 6-10-6 10-6zM2 16l10 6 10-6M2 12l10 6 10-6"/>
+          </svg>
+          <span className="text-[13px] text-white font-semibold">Capas</span>
+          <span className="text-[11px] text-[#7C8AA8] f-mono">{activeCount} activas</span>
+          <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24" className={`text-[#7C8AA8] transition-transform ${open?"rotate-180":""}`}>
+            <path d="M18 15l-6-6-6 6"/>
+          </svg>
+        </button>
+      </div>
+    );
+  }
+
+  function LayerRow({ label, meta, on, onClick, color }) {
+    return (
+      <button onClick={onClick} className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-white/[0.04] text-left">
+        <span className="w-2 h-2 rounded-full" style={{ background: on ? color : "#2E3A55", boxShadow: on ? `0 0 8px ${color}` : "none" }}/>
+        <div className="flex-1 min-w-0">
+          <div className="text-[12.5px] text-white font-medium">{label}</div>
+          <div className="text-[10.5px] text-[#7C8AA8] truncate">{meta}</div>
+        </div>
+        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md ${on?"text-[#10D96B]":"text-[#7C8AA8]"}`}
+              style={{
+                background: on?"rgba(16,217,107,0.12)":"rgba(255,255,255,0.03)",
+                border: `1px solid ${on?"rgba(16,217,107,0.35)":"rgba(255,255,255,0.08)"}`,
+              }}>
+          {on ? "ON" : "OFF"}
+        </span>
+      </button>
+    );
+  }
+
+  // ============ 3D CONTROLS (Google Earth style, bottom-right) ============
+  function MapControls() {
+    return (
+      <div className="absolute bottom-6 right-6 z-20 flex items-end gap-2">
+        {/* vertical stack of compact round buttons */}
+        <div className="flex flex-col gap-1.5">
+          {/* compass */}
+          <button title="Reorientar al norte" className="w-10 h-10 rounded-full panel-flat flex items-center justify-center hover:border-white/20">
+            <div className="relative w-5 h-5">
+              <div className="absolute inset-0 rounded-full" style={{ border:"1.5px solid rgba(34,211,238,0.55)" }}/>
+              <div className="absolute left-1/2 -translate-x-1/2 top-0 text-[8px] f-mono text-[#22D3EE] leading-none">N</div>
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-0.5 h-2 bg-[#22D3EE]" style={{ transformOrigin:"center", transform:"translate(-50%,-50%) rotate(18deg)" }}/>
+            </div>
+          </button>
+          {/* person / street view */}
+          <button title="Street View" className="w-10 h-10 rounded-full panel-flat flex items-center justify-center hover:border-white/20 text-[#C3CDE0]">
+            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><path d="M10 9h4l-1 6h-2l-1-6zM10 15l-2 6M14 15l2 6"/></svg>
+          </button>
+          {/* 2D/3D toggle */}
+          <button title="Alternar 2D/3D" className="w-10 h-10 rounded-full panel-flat flex items-center justify-center hover:border-white/20 text-[#22D3EE]"
+                  style={{ background:"rgba(34,211,238,0.12)", borderColor:"rgba(34,211,238,0.35)" }}>
+            <span className="text-[12px] font-bold f-mono">3D</span>
+          </button>
+          {/* zoom group */}
+          <div className="panel-flat rounded-full flex flex-col overflow-hidden">
+            <button title="Acercar" className="w-10 h-10 flex items-center justify-center text-[#C3CDE0] hover:bg-white/[0.06]">
+              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.4" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            </button>
+            <div className="h-px mx-2 bg-white/10"/>
+            <button title="Alejar" className="w-10 h-10 flex items-center justify-center text-[#C3CDE0] hover:bg-white/[0.06]">
+              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.4" viewBox="0 0 24 24"><path d="M5 12h14"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ============ BOTTOM STATUS (right, left of controls) ============
+  function BottomStatus() {
+    return (
+      <div className="absolute bottom-8 right-[80px] z-10 flex items-center gap-3 f-mono text-[10px] text-[#7C8AA8]">
+        <span>Cámara: 3.16 km</span>
+        <span className="w-px h-3 bg-white/10"/>
+        <span>19°25’01.66″N · 99°11’06.13″W</span>
+      </div>
+    );
+  }
+
+  // ============ APP ============
+  function App() {
+    const [nodeOpen, setNodeOpen] = useState(true);
+    return (
+      <div className="relative w-[1440px] h-[900px] overflow-hidden" style={{ background: "var(--bg)" }}>
+        <Map3D/>
+        <Header/>
+        <Sidebar/>
+        {nodeOpen && <NodePopup onClose={()=>setNodeOpen(false)}/>}
+        <LayersPanel/>
+        <MapControls/>
+        <BottomStatus/>
+      </div>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById("app")).render(<App/>);
+  </script>
+</body>
+</html>
