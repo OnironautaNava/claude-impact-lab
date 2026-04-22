@@ -1,0 +1,150 @@
+﻿system,solution_scope,route_short_name,route_id,route_long_name,gtfs_directions,gtfs_shape_variants,gtfs_headsign_variants,line_shp_local,station_shp_local,ridership_local,etl_role,notes
+Metro,integrado,1,B_CMX0200L1,Pantitlán - Observatorio,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple
+Metro,integrado,2,B_CMX0200L2,Cuatro Caminos - Tasqueña,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple
+Metro,integrado,3,B_CMX0200L3,Indios verdes - Universidad,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple
+Metro,integrado,4,B_CMX0200L4,Santa Anita - Martín Carrera,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple
+Metro,integrado,5,B_CMX0200L5,Politécnico - Pantitlán,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple
+Metro,integrado,6,B_CMX0200L6,El Rosario - Martín Carrera,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple
+Metro,integrado,7,B_CMX0200L7,El Rosario - Barranca del Muerto,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple
+Metro,integrado,8,B_CMX0200L8,Garibaldi - Constitución de 1917,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple
+Metro,integrado,9,B_CMX0200L9,Pantitlán - Tacubaya,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple
+Metro,integrado,A,B_CMX0200LA,Pantitlán - La Paz,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple
+Metro,integrado,B,B_CMX0200LB,Ciudad Azteca - Buenavista,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple
+Metro,integrado,L12,B_CMX020L12,Tláhuac-Mixcoac,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple
+Metrobus,integrado,1,B_CMX0300L1,Indios Verdes - El Caminero,2,10,6,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,ramales/variantes fuertes
+Metrobus,integrado,2,B_CMX0300L2,Tepalcates - Tacubaya,2,10,8,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,ramales/variantes fuertes
+Metrobus,integrado,3,B_CMX0300L3,Tenayuca - Pueblo Sta. Cruz Atoyac,2,10,6,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,ramales/variantes fuertes
+Metrobus,integrado,4,B_CMX0300L4,Centro Histórico - Buenavista - San Lázaro/AICM T1 y T2/Pantitlán,2,9,8,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,ramales/variantes fuertes
+Metrobus,integrado,5,B_CMX0300L5,Río de lo Remedios - Preparatoria 1,2,10,5,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,ramales/variantes fuertes
+Metrobus,integrado,6,B_CMX0300L6,Villa de Aragón - El Rosario,2,6,4,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,ramales/variantes fuertes
+Metrobus,integrado,7,B_CMX0300L7,Indios Verdes - Campo Marte,2,12,6,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,ramales/variantes fuertes
+Metrobus,integrado,SL01,B_CMX03SL01,París - Alameda Tacubaya (Servicio de Apoyo L1),2,4,3,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,variantes moderadas
+Trolebus,integrado,1,B_CMX0400L1,"Corredor cero emisiones ""Eje Central""",2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple
+Trolebus,integrado,10,B_CMX040L10,Constitución de 1917 - Acahualtepec,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple
+Trolebus,integrado,12,B_CMX040L12,Tasqueña - Perisur,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple
+Trolebus,integrado,2,B_CMX0400L2,"Corredor cero emisiones ""Eje 2-2A Sur""",2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple
+Trolebus,integrado,3,B_CMX0400L3,"Corredor cero emisiones ""Eje 7-7A Sur""",2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple
+Trolebus,integrado,4,B_CMX0400L4,Metro Boulevard Puerto Aéreo / Metro El Rosario,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple
+Trolebus,integrado,5,B_CMX0400L5,San Felipe de Jesús / Metro Hidalgo,2,4,3,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,variantes moderadas
+Trolebus,integrado,6,B_CMX0400L6,Metro El Rosario / Metro Chapultepec,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple
+Trolebus,integrado,7,B_CMX0400L7,CETRAM Periférico Oriente  - Ciudad Universitaria,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple
+Trolebus,integrado,8,B_CMX0400L8,Circuito Politécnico,1,1,1,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple
+Trolebus,integrado,9,B_CMX0400L9,Villa de Cortés - Apatlaco - Tepalcates,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple
+Cablebus,integrado,1,B_CMX0800L1,Cuautepec/Tlalpexco a Indios Verdes,2,4,3,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,variantes moderadas
+Cablebus,integrado,2,B_CMX0800L2,Constitución de 1917 a Santa Marta,2,4,3,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,variantes moderadas
+Cablebus,integrado,3,B_CMX0800L3,Los Pinos/Constituyentes a Vasco de Quiroga,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple
+Tren Ligero,integrado,1,B_CMX0600L1,Tasqueña - Xochimilco,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple
+RTP,candidato,1-D,B_CMX05001D,Metro Santa Martha -  Metro Mixcoac,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,101,B_CMX050101,Lomas de Cuautepec - La Villa Ferroplaza,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,101-A,B_CMX05101A,Ampliación Malacates -  La Villa/Ferroplaza,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,101-B,B_CMX05101B,Colonia Forestal - La Villa Ferroplaza,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,101-D,B_CMX05101D,La Brecha Cocoyotes - La Villa Ferroplaza,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,102,B_CMX050102,La Brecha - Metro Indios Verdes,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,103,B_CMX050103,Ampliación Malacates - Metro la Raza (Linea 3),2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,104,B_CMX050104,Colonia El Tepetatal (El Charco) -  Metro Potrero,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,107,B_CMX050107,Metro El Rosario - Metro Tacuba,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,107-B,B_CMX05107B,La Villa/Cantera - Metro Tacuba por Ceylán,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,108,B_CMX050108,Colonia El Tepetatal (El Charco)  -  Metro Indios Verdes,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,11-A,B_CMX0511AN,Aragón por Av. 604 - Metro Chapultepec (Nochebús),2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,11-A,B_CMX0511AX,Aragón por Av. 604 - Metro Chapultepec (Expreso),2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,110,B_CMX050110,Chimalpa - Metro Tacubaya,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,110-B,B_CMX05110B,San Lorenzo Acopilco - Metro Tacubaya,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,110-C,B_CMX05110C,La Pila - Metro Tacubaya,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,111-A,B_CMX05111A,Izazaga - Caseta,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,112,B_CMX050112,Ampliación Jalalpa - Metro Tacubaya (Av. Jalisco),2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,113-B,B_CMX05113B,Col. Navidad (Las Piedras) - Metro Tacubaya,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,115,B_CMX05115N,Jesús del Monte (Cuajimalpa) - Metro Tacubaya (Nochebús),2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,115,B_CMX05115O,Jesús del Monte (Cuajimalpa) - Metro Tacubaya (Ordinario),2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,115-A,B_CMX05115A,Las Águilas - Metro Chapultepec,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,116,B_CMX050116,Santa Rosa Xochiac - Metro Mixcoac,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,116-A,B_CMX05116A,Río Guadalupe - Metro General Anaya,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,118,B_CMX050118,Santa Rosa Xochiac - Metro Tacubaya,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,119,B_CMX050119,Piloto - Metro Tacubya (Av. Jalisco),2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,119-B,B_CMX05119B,Presidentes - Metro Mixcoac,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,12,B_CMX050012,Aragón - Panteón San Isidro,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,120,B_CMX050120,Metro Zapata - San Mateo Tlaltenango,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,121-A,B_CMX05121A,San Bartolo - Metro Zapata,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,123-A,B_CMX05123A,Pedregal de San Nicolás - Metro Universidad,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,124,B_CMX050124,Puerta Grande - Metro Mixcoac,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,124-A,B_CMX05124A,Tepeaca - Metro Mixcoac,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,125,B_CMX050125,Bosques del Pedregal - Metro Universidad por López Portillo,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,126,B_CMX050126,Magdalena Atlitico a Metro Copilco,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,128,B_CMX050128,San Bernabé/Oyamel - Metro Universidad,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,13-A,B_CMX05013A,Metro Chapultepec - Torres de Padierna/Pedregal de San Nicolás,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,131,B_CMX050131,Estadio Azteca - Caseta Cuernavaca,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,132,B_CMX050132,Tlalmille - Estadio Azteca,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,134,B_CMX050134,Santo Tomás Ajusco - Estadio Azteca,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,134-A,B_CMX05134A,Parres - Estadio Azteca,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,134-B,B_CMX05134B,Estadio Azteca - Topilejo,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,134-C,B_CMX05134C,Santo Tomás Ajusco - Metro Universidad,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,134-D,B_CMX05134D,Topilejo - Metro Universidad,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,141,B_CMX050141,Villa Milpa Alta - Metro Tláhuac,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,142,B_CMX050142,Tulyehualco - Xochimilco/Palmas,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,143,B_CMX050143,Villa Milpa Alta - Metro Tasqueña,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,144,B_CMX050144,San Pablo Oztotepec -  Xochimilco/Palmas,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,144-C,B_CMX05144C,San Salvador Cuahutenco - Villa Milpa Alta,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,145,B_CMX050145,Pedregal de San Francisco - Xochimilco/Palmas,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,145-A,B_CMX05145A,Santiago Tepalcatlalpan - República del Salvador,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,146,B_CMX050146,San Miguel Tehuizco - Xochimilco/Palmas,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,147,B_CMX050147,San Bartolomé Xicomulco - Xochimilco/Palmas,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,148,B_CMX050148,San Nicolás Tetelco - Metro Tláhuac,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,149,B_CMX050149,Mixquic - Metro Tláhuac,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,159,B_CMX050159,Metro Constitución de 1917 - Palmitas,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,161,B_CMX050161,Metro Constitución de 1917 - Ampliación Santiago,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,161-C,B_CMX05161C,Metro Constitución de 1917 - Palmas,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,161-D,B_CMX05161D,Colonia Buenavista - Central de Abasto,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,161-E,B_CMX05161E,San José Buenavista - Metro Constitución de 1917,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,161-F,B_CMX05161F,Barranca de Guadalupe - Metro Constitución de 1917,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,162,B_CMX050162,Santa Catarina - Metro Constitución de 1917,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,162-B,B_CMX05162B,Campestre Potrero - Metro Zaragoza,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,162-D,B_CMX05162D,Santa Catarina - Metro Universidad,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,163,B_CMX050163,San Miguel Teotongo/Guadalupe  -  Metro Zaragoza,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,163-A,B_CMX05163A,San Miguel Teotongo/Torres  -  Metro Zaragoza/M. Tepalcates,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,163-B,B_CMX05163B,San Miguel Teotongo/Avisadero -  Metro Zaragoza,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,164,B_CMX050164,Colonia Miguel de la Madrid -  Metro Zaragoza,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,165-A,B_CMX05165AE,Ejército de Oriente - Metro Constitución de 1917 (Ecobús),2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,165-A,B_CMX05165AO,Ejército de Oriente - Metro Constitución de 1917 (Ordinario),2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,165-A,B_CMX05165AX,Ejército de Oriente - Metro Constitución de 1917 (Expreso),2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,166,B_CMX050166,Colonia Ixtlahuacan Avisadero -  Metro Zaragoza,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,167,B_CMX050167,Avisadero/Colonia Miravalle -  Metro Zaragoza,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,168,B_CMX050168,Arenal 4ta. Sección - Metro Pantitlán,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,17-E,B_CMX05017E,Metro Universidad - San Pedro Martir por Carretera Federal,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,17-F,B_CMX05017F,Metro Tasqueña - San Pedro Martir por FOVISSSTE,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,18,B_CMX050018,Metro Cuatro Caminos -  Colonia Moctezuma 2da. Sección,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,19,B_CMX050019,Metro El Rosario - Parque México por Cuitláhuac,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,19-A,B_CMX05019A,Metro El Rosario - Parque México por Normal,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,2-A,B_CMX05002A,Izazaga - San Pedro Martir por FOVISSSTE,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,200,B_CMX05200N,Circuito Bicentenario (Nochebús),2,2,1,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,200,B_CMX05200X,Circuito Bicentenario (Expreso),2,2,1,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,23,B_CMX050023,Colonia El Tepetatal (El Charco) - Metro La Raza,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,25,B_CMX050025,Zacatenco - Metro Potrero,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,27-A,B_CMX05027A,Reclusorio Norte - Metro Hidalgo/Alameda Central,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,300-A,B_CMX05300A,Paseo Acoxpa - Metro Auditorio,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,300-B,B_CMX05300B,Paseo Acoxpa - Santa Fe (UAM Cuajimalpa),2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,31-B,B_CMX05031B,Izazaga- Deportivo Xochimilco,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,33,B_CMX050033,León de los Aldama - Metro Chabacano,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,34-A,B_CMX05034A,Metro Balderas - Centro Comercial Santa Fe,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,34-B,B_CMX0534BE,Parque de la Bombilla - Centro comercial Santa Fe (Ecobús),2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,34-B,B_CMX0534BO,Parque de la Bombilla - Centro comercial Santa Fe (Ordinario),2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,37,B_CMX050037,U.C.T.M. Atzacoalco - Carmen Serdán,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,39-B,B_CMX05039B,Av. Santa Ana - Xochimilco/Bosque de Nativitas,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,43,B_CMX050043,San Felipe/León de Los Aldama -  Central de Abastos,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,46-C,B_CMX05046C,Lienzo Charro/Santa Catarina - Central de Abasto,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,47-A,B_CMX0547AN,Alameda Oriente - Xochimilco / Bosque de Nativitas (Nochebús),2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,47-A,B_CMX0547AX,Alameda Oriente - Xochimilco / Bosque de Nativitas (Expreso),2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,52-C,B_CMX05052C,Metro Santa Martha - Metro Zapata,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,57-A,B_CMX0557AN,Toreo - Metro Constitución de 1917 (Nochebús),2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,57-A,B_CMX0557AX,Toreo - Metro Constitución de 1917 (Expreso),2,2,3,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,variantes moderadas; fuera del ETL actual
+RTP,candidato,57-C,B_CMX05057C,Toreo - Metro Constitución de 1917 ,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,59,B_CMX050059,Metro El Rosario - Metro Chapultepec,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,59-A,B_CMX05059A,Metro el Rosario  - Sullivan,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,69,B_CMX050069,Estadio Azteca - Loloigque,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,76,B_CMX05076N,Centro Comercial Santa Fe -  Metro Auditorio por Palmas (Nochebús),2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,76,B_CMX05076X,Centro Comercial Santa Fe -  Metro Auditorio por Palmas (Expreso),2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,76-A,B_CMX05076A,Centro Comercial Santa Fe – Metro Auditorio por Reforma,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,81-A,B_CMX05081A,San Gregorio Atlapulco - Metro Taxqueña,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,9-C,B_CMX05009C,Centro Comercial Santa Fe  - Tlacuitlapa/Puerta Grande,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,Ordinario1 L1,B_CMX05E1L1,Balderas - Observatorio,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,Ordinario2 L1,B_CMX05E2L1,Balderas - CETRAM Chapultepec,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,Ordinario3 L1,B_CMX05E3L1,Balderas - Alameda Tacubaya,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual
+RTP,candidato,Ordinario4 L1,B_CMX05E4L1,Observatorio - Tacubaya,2,2,2,si,si,si,GTFS principal; SHP geometria; afluencia enrichment,corredor simple; fuera del ETL actual

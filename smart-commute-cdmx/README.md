@@ -25,9 +25,9 @@ Reglas de fuente:
 
 Nota: este sprint deja listo el contrato de datos y el pipeline incremental. El calculo AGEB actual es aproximado por centroides; la interseccion areal-weighted exacta queda para el siguiente incremento.
 
-## ETL multimodal (Metro + Metrobus)
+## ETL multimodal (Metro + Metrobus + Transportes Electricos)
 
-Para cobertura completa de estaciones en ambos servicios, se agrego un ETL en Python que usa cartografia oficial KMZ:
+Para cobertura completa de estaciones y contexto de demanda multimodal, se agrego un ETL en Python que usa GTFS oficial, cartografia SHP/KMZ y afluencia operativa:
 
 ```bash
 npm run generate:multimodal
@@ -35,10 +35,18 @@ npm run generate:multimodal
 
 Entradas requeridas en `SMART_COMMUTE_DATA_DIR`:
 
+- `raw-data/gtfs/gtfs_cdmx.zip`
 - `stcmetro_kmz/STC_Metro_estaciones.kmz`
 - `mb_kmz/Metrobus_estaciones.kmz`
 - `afluenciastc_desglosado_03_2026.csv`
 - `afluenciamb_desglosado_03_2026.csv`
+
+Entradas opcionales ya integradas para Transportes Electricos:
+
+- `raw-data/transportes-electricos/ste-trolebus/ridership/afluencia_desglosada_trolebus_03_2026.csv`
+- `raw-data/transportes-electricos/cablebus/ridership/afluencia_desglosada_cb_03_2026.csv`
+- `raw-data/transportes-electricos/tren-ligero/ridership/afluencia_desglosada_tl_03_2026.csv`
+- `raw-data/transportes-electricos/cartography/` para KMZ compartidos de estaciones y lineas de los 3 subsistemas
 
 Salidas generadas en `public/data/`:
 
@@ -47,15 +55,30 @@ Salidas generadas en `public/data/`:
 - `routes.json`
 - `precomputed_impact.json`
 - `etl-manifest.json`
+- `network-diagnostics.json` (reporte tecnico de topologia y lineas sospechosas)
 
 Ajustes ETL documentados:
 
+- `GTFS` define variantes, secuencia y sentido por linea usando `routes.txt`, `trips.txt`, `stop_times.txt` y `shapes.txt`.
+- `SHP` local se usa como fuente primaria de geometria/catalogo cuando existe; `KMZ` queda como fallback para no romper flujos existentes.
 - Se parsea KMZ/KML y se extraen atributos desde `description` (tabla HTML embebida) para recuperar `NOMBRE` y `LINEA`.
 - Metro: ridership por estacion desde STC (promedio ultimos 90 dias).
-- Metrobus: el CSV disponible viene por linea, no por estacion; se distribuye afluencia promedio por linea entre sus estaciones como aproximacion operativa.
-- Topologia de rutas: las estaciones se ordenan por `snapping` contra la geometria de linea oficial (KMZ de lineas), no por orden geografico simple.
+- Metrobus y Transportes Electricos: cuando la afluencia viene por linea, se distribuye el promedio por linea entre las estaciones cartografiadas como aproximacion operativa.
+- Topologia de rutas: las estaciones se ordenan por `snapping` contra la geometria oficial, separando variantes por `RUTA`, `TRAMO` y `circuito` antes de conectar estaciones consecutivas.
+- Se colapsan nodos duplicados cercanos dentro de la misma linea para evitar sobreconexiones por sentidos opuestos o paradas homonimas casi coincidentes.
 - Se aplica un guardrail de distancia maxima entre estaciones consecutivas para evitar saltos espurios en lineas con ramales o geometria fragmentada.
+- Si existe afluencia de Transportes Electricos pero aun no hay KMZ compartido, la demanda se incorpora al resumen del sistema y el manifest deja trazabilidad de la cobertura geoespacial faltante.
 - El frontend intenta cargar `multimodal-data.json` primero y cae a `mvp-data.json` como fallback.
+
+Dependencias Python del ETL:
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+Reporte complementario:
+
+- `NETWORK_TOPOLOGY_REPORT.md` resume el diagnostico humano de las lineas mas sospechosas despues de aplicar la correccion.
 
 Ajuste de grafo en frontend:
 
@@ -80,6 +103,11 @@ D:\data_CDMX\
    │  ├─ ridership\afluenciamb_desglosado_03_2026.csv
    │  ├─ cartography\kmz\Metrobus_estaciones.kmz
    │  └─ cartography\kmz\Metrobus_lineas.kmz
+   ├─ transportes-electricos\
+   │  ├─ ste-trolebus\ridership\afluencia_desglosada_trolebus_03_2026.csv
+   │  ├─ cablebus\ridership\afluencia_desglosada_cb_03_2026.csv
+   │  ├─ tren-ligero\ridership\afluencia_desglosada_tl_03_2026.csv
+   │  └─ cartography\(KMZ compartidos de estaciones y lineas para los 3 subsistemas)
    ├─ ecobici\inventory\cicloestaciones_ecobici.csv
    ├─ cycling-infra\network\infraestructura-vial-ciclista.json
    └─ urban-context\ageb\(opcional: ageb_urbanas.geojson + censo_2020_ageb.csv)

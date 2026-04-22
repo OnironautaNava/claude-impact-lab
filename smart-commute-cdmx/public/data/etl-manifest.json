@@ -1,19 +1,41 @@
 {
-  "generatedAt": "2026-04-20T21:37:53.552459Z",
-  "sourceMode": "kmz-multimodal",
+  "generatedAt": "2026-04-22T01:26:04.440504Z",
+  "sourceMode": "gtfs-shp-multimodal",
   "inputs": {
     "dataDir": "D:\\data_CDMX",
-    "metroStationsKmz": true,
-    "metroLinesKmz": true,
-    "metrobusStationsKmz": true,
-    "metrobusLinesKmz": true,
+    "gtfsZip": true,
+    "metroStationsSource": "D:\\data_CDMX\\raw-data\\stc-metro\\cartography\\shp\\STC_Metro_estaciones_utm14n.shp",
+    "metroLinesSource": "D:\\data_CDMX\\raw-data\\stc-metro\\cartography\\shp\\STC_Metro_lineas_utm14n.shp",
+    "metrobusStationsSource": "D:\\data_CDMX\\raw-data\\metrobus\\cartography\\shp\\Metrobus_estaciones.shp",
+    "metrobusLinesSource": "D:\\data_CDMX\\raw-data\\metrobus\\cartography\\shp\\Metrobus_lineas.shp",
     "metroRidershipCsv": true,
-    "metrobusRidershipCsv": true
+    "metrobusRidershipCsv": true,
+    "electricSubsystems": {
+      "trolebus": {
+        "ridershipCsv": true,
+        "stationsSource": "C:\\Users\\mario\\AppData\\Local\\Temp\\smart-commute-cdmx-electric-shp\\ste_trolebus_shp\\ste_trolebus_shp\\STE_Trolebus_Paradas.shp",
+        "linesSource": "C:\\Users\\mario\\AppData\\Local\\Temp\\smart-commute-cdmx-electric-shp\\ste_trolebus_shp\\ste_trolebus_shp\\STE_Trolebus_Lineas.shp",
+        "hasGeography": true
+      },
+      "cablebus": {
+        "ridershipCsv": true,
+        "stationsSource": "C:\\Users\\mario\\AppData\\Local\\Temp\\smart-commute-cdmx-electric-shp\\ste_cablebus_shp\\ste_cablebus_shp\\STE_Cablebus_estaciones.shp",
+        "linesSource": "C:\\Users\\mario\\AppData\\Local\\Temp\\smart-commute-cdmx-electric-shp\\ste_cablebus_shp\\ste_cablebus_shp\\STE_Cablebus_lineas.shp",
+        "hasGeography": true
+      },
+      "trenligero": {
+        "ridershipCsv": true,
+        "stationsSource": "C:\\Users\\mario\\AppData\\Local\\Temp\\smart-commute-cdmx-electric-shp\\ste_tren_ligero_shp\\ste_tren_ligero_shp\\STE_TrenLigero_estaciones_utm14n.shp",
+        "linesSource": "C:\\Users\\mario\\AppData\\Local\\Temp\\smart-commute-cdmx-electric-shp\\ste_tren_ligero_shp\\ste_tren_ligero_shp\\STE_TrenLigero_linea_utm14n.shp",
+        "hasGeography": true
+      }
+    }
   },
   "outputs": [
     "multimodal-data.json",
     "stations.json",
     "routes.json",
-    "precomputed_impact.json"
+    "precomputed_impact.json",
+    "network-diagnostics.json"
   ]
 }

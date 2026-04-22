@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import maplibregl, { type GeoJSONSourceSpecification, type StyleSpecification } from 'maplibre-gl';
 import type { Feature, FeatureCollection, LineString, Point } from 'geojson';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import type { LayerState, MvpData, StationImpact } from './types';
+import type { LayerState, LineRidershipSummary, MvpData, StationImpact, SystemRidershipSummary } from './types';
 
 type ScenarioKey = 'A' | 'B';
 
@@ -240,6 +240,46 @@ const formatCompact = (value: number) => {
 
 const formatPct = (value: number) => `${value.toFixed(1)}%`;
 const formatSigned = (value: number) => (value > 0 ? `+${formatCompact(value)}` : formatCompact(value));
+
+const fallbackSystemSummaries = (data: MvpData | null): SystemRidershipSummary[] => {
+  if (!data) {
+    return [];
+  }
+
+  return [
+    {
+      key: 'metro',
+      label: 'Metro',
+      averageDailyRidership: data.summary.averageMetroDaily,
+      stationCount: data.stations.filter((station) => inferSystemKey(station) === 'metro').length,
+      lineCount: new Set(
+        data.stations.filter((station) => inferSystemKey(station) === 'metro').flatMap((station) => station.lines),
+      ).size,
+      hasGeography: true,
+    },
+    {
+      key: 'metrobus',
+      label: 'Metrobus',
+      averageDailyRidership: data.summary.averageMetrobusDaily,
+      stationCount: data.stations.filter((station) => inferSystemKey(station) === 'metrobus').length,
+      lineCount: data.summary.topMetrobusLines.length,
+      hasGeography: true,
+    },
+  ];
+};
+
+const fallbackTopLines = (data: MvpData | null): LineRidershipSummary[] => {
+  if (!data) {
+    return [];
+  }
+
+  return data.summary.topMetrobusLines.map((line) => ({
+    ...line,
+    systemKey: line.systemKey ?? 'metrobus',
+    systemLabel: line.systemLabel ?? 'Metrobus',
+    hasGeography: line.hasGeography ?? true,
+  }));
+};
 
 const networkAffectThreshold = 0.3;
 
@@ -498,6 +538,14 @@ function App() {
   const comparisonScenario: ScenarioKey = selectedScenario === 'A' ? 'B' : 'A';
   const comparisonAggregate = scenarioAggregates[comparisonScenario];
   const baselineAggregate = scenarioAggregates.baseline;
+  const systemRidership = useMemo(
+    () => data?.summary.systemDailyRidership ?? fallbackSystemSummaries(data),
+    [data],
+  );
+  const topNetworkLines = useMemo(
+    () => data?.summary.topNetworkLines ?? fallbackTopLines(data),
+    [data],
+  );
 
   const decisionBrief = useMemo(() => {
     const metrics: Record<ScenarioKey, AggregateMetrics> = {
@@ -909,7 +957,7 @@ function App() {
         <div className="loading-card">
           <p className="eyebrow">Smart Commute CDMX</p>
           <h1>Cargando MVP geoespacial...</h1>
-          <p>Procesando cierres de Metro, Ecobici y red ciclista para la primera lectura del sistema.</p>
+          <p>Procesando Metro, Metrobus, Transportes Electricos, Ecobici y red ciclista para la lectura multimodal.</p>
         </div>
       </div>
     );
@@ -1020,12 +1068,33 @@ function App() {
         <section className="system-card">
           <div>
             <span className="section-label">Pulso del sistema</span>
-            <strong>Metro diario: {formatCompact(data.summary.averageMetroDaily)}</strong>
+            <strong>{formatCompact(data.summary.networkRidershipDaily)} viajes/dia modelados</strong>
           </div>
-          <div>
-            <span className="section-label">Contexto Metrobus</span>
-            <strong>{formatCompact(data.summary.averageMetrobusDaily)} viajes/dia</strong>
+          <div className="system-summary-grid">
+            {systemRidership.map((system) => (
+              <article key={system.key}>
+                <span>{system.label}</span>
+                <strong>{formatCompact(system.averageDailyRidership)} viajes/dia</strong>
+                <small>
+                  {system.stationCount > 0
+                    ? `${system.stationCount} nodos · ${system.lineCount} lineas`
+                    : `${system.lineCount} lineas · sin cartografia KMZ aun`}
+                </small>
+              </article>
+            ))}
           </div>
+          {topNetworkLines.length > 0 ? (
+            <div>
+              <span className="section-label">Lineas con mayor demanda</span>
+              <div className="system-tags">
+                {topNetworkLines.slice(0, 8).map((line) => (
+                  <span key={`${line.systemKey ?? 'network'}-${line.line}`}>
+                    {(line.systemLabel ?? 'Red') + ' · ' + line.line}: {formatCompact(line.averageDailyRidership)}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : null}
           <div className="system-tags">
             <span>{data.summary.ecobiciStations} cicloestaciones</span>
             <span>{data.summary.totalCycleKm} km ciclistas</span>

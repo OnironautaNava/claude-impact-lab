@@ -21,9 +21,21 @@ export interface StationImpact {
   resilienceScore: number;
 }
 
-export interface MetrobusLineSummary {
+export interface LineRidershipSummary {
+  systemKey?: string;
+  systemLabel?: string;
   line: string;
   averageDailyRidership: number;
+  hasGeography?: boolean;
+}
+
+export interface SystemRidershipSummary {
+  key: string;
+  label: string;
+  averageDailyRidership: number;
+  stationCount: number;
+  lineCount: number;
+  hasGeography: boolean;
 }
 
 export interface MvpData {
@@ -41,7 +53,9 @@ export interface MvpData {
     metroNetworkSegments: number;
     metroNetworkKm: number;
     networkRidershipDaily: number;
-    topMetrobusLines: MetrobusLineSummary[];
+    topMetrobusLines: LineRidershipSummary[];
+    systemDailyRidership?: SystemRidershipSummary[];
+    topNetworkLines?: LineRidershipSummary[];
   };
   stations: StationImpact[];
   ecobici: FeatureCollection<Point>;
