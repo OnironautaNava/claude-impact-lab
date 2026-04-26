@@ -179,4 +179,27 @@ Vite build tool configuration, plugin API, SSR, and Vite 8 Rolldown migration. U
 - `.claude/skills/vite/references/environment-api.md`: Vite 6+ Environment API for multiple runtime environments
 - `.claude/skills/vite/references/rolldown-migration.md`: Vite 8 Rolldown bundler and Oxc transformer migration
 
+## Core
+
+Vitest fast unit testing framework powered by Vite with Jest-compatible API. Use when writing tests, mocking, configuring coverage, or working with test filtering and fixtures.
+
+- `.claude/skills/vitest/SKILL.md`
+- `.claude/skills/vitest/GENERATION.md`
+- `.claude/skills/vitest/references/advanced-environments.md`: Configure environments like jsdom, happy-dom for browser APIs
+- `.claude/skills/vitest/references/advanced-projects.md`: Multi-project configuration for monorepos and different test types
+- `.claude/skills/vitest/references/advanced-type-testing.md`: Test TypeScript types with expectTypeOf and assertType
+- `.claude/skills/vitest/references/advanced-vi.md`: vi helper for mocking, timers, utilities
+- `.claude/skills/vitest/references/core-cli.md`: Command line interface commands and options
+- `.claude/skills/vitest/references/core-config.md`: Configure Vitest with vite.config.ts or vitest.config.ts
+- `.claude/skills/vitest/references/core-describe.md`: describe/suite for grouping tests into logical blocks
+- `.claude/skills/vitest/references/core-expect.md`: Assertions with matchers, asymmetric matchers, and custom matchers
+- `.claude/skills/vitest/references/core-hooks.md`: beforeEach, afterEach, beforeAll, afterAll, and around hooks
+- `.claude/skills/vitest/references/core-test-api.md`: test/it function for defining tests with modifiers
+- `.claude/skills/vitest/references/features-concurrency.md`: Concurrent tests, parallel execution, and sharding
+- `.claude/skills/vitest/references/features-context.md`: Test context, custom fixtures with test.extend
+- `.claude/skills/vitest/references/features-coverage.md`: Code coverage with V8 or Istanbul providers
+- `.claude/skills/vitest/references/features-filtering.md`: Filter tests by name, file patterns, and tags
+- `.claude/skills/vitest/references/features-mocking.md`: Mock functions, modules, timers, and dates with vi utilities
+- `.claude/skills/vitest/references/features-snapshots.md`: Snapshot testing with file, inline, and file snapshots
+
 <!-- autoskills:end -->

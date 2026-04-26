@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import maplibregl, { type GeoJSONSourceSpecification, type StyleSpecification } from 'maplibre-gl';
-import type { Feature, FeatureCollection, LineString, Point } from 'geojson';
+import type { Feature, FeatureCollection, LineString, Point, Polygon } from 'geojson';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import type { LayerState, MvpData, StationImpact, SystemRidershipSummary } from './types';
+import { formatCompact, formatPct, normalizeSearchText } from './utils/formatting';
 
 type ScenarioKey = 'A' | 'B';
 
@@ -30,15 +31,19 @@ const mapStyle: StyleSpecification = {
   layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
 };
 
-const defaultLayers: LayerState = {
-  ecobici: true,
-  cycleInfra: true,
-  metroNetwork: true,
-};
-
 const scenarioOrder: ScenarioKey[] = ['A', 'B'];
 
 const systemOrder = ['metro', 'metrobus', 'ecobici', 'trolebus', 'trenligero', 'cablebus', 'rtp', 'otro'];
+
+const networkSystemKeys = systemOrder.filter((key) => key !== 'ecobici');
+
+const defaultLayers: LayerState = {
+  impactImmediate: true,
+  impactSystemic: true,
+  ecobici: true,
+  cycleInfra: true,
+  networkSystems: Object.fromEntries(networkSystemKeys.map((key) => [key, true])) as Record<string, boolean>,
+};
 
 const systemLabelByKey: Record<string, string> = {
   metro: 'Metro',
@@ -118,15 +123,8 @@ const getLineBadgeColor = (station: StationImpact, lineLabel: string) => {
   return station.lineColor;
 };
 
-const normalizeSearchText = (value: string) =>
-  value
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim();
-
-const inferSystemKey = (station: StationImpact) => {
-  const raw = (station.mode ?? station.id.split('-')[0] ?? 'otro').toLowerCase().trim();
+const normalizeSystemKey = (rawValue: string | null | undefined) => {
+  const raw = (rawValue ?? 'otro').toLowerCase().trim();
   if (raw === 'mb') return 'metrobus';
   if (raw === 'tren ligero' || raw === 'tren-ligero') return 'trenligero';
   if (raw === 'trolebus' || raw === 'trolebuses') return 'trolebus';
@@ -134,16 +132,12 @@ const inferSystemKey = (station: StationImpact) => {
   return 'otro';
 };
 
+const inferSystemKey = (station: StationImpact) => normalizeSystemKey(station.mode ?? station.id.split('-')[0]);
+
 const sortByName = (a: StationImpact, b: StationImpact) =>
   a.name.localeCompare(b.name, 'es', { sensitivity: 'base' });
 
 const numberFormatter = new Intl.NumberFormat('es-MX');
-const formatCompact = (value: number) => {
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
-  if (value >= 1000) return `${(value / 1000).toFixed(0)}k`;
-  return numberFormatter.format(value);
-};
-const formatPct = (value: number) => `${value.toFixed(1)}%`;
 
 const fallbackSystemSummaries = (data: MvpData | null): SystemRidershipSummary[] => {
   if (!data) return [];
@@ -211,16 +205,20 @@ const networkSourceFromData = (
   metroNetwork: FeatureCollection<LineString>,
   stationWeights: Map<string, number>,
   activeClosures: Set<string>,
+  visibleSystems: Set<string>,
 ): FeatureCollection<LineString> => ({
   type: 'FeatureCollection',
-  features: metroNetwork.features.map<Feature<LineString>>((feature) => {
+  features: metroNetwork.features.flatMap<Feature<LineString>>((feature) => {
+    const systemKey = normalizeSystemKey(String(feature.properties?.mode ?? 'otro'));
+    if (!visibleSystems.has(systemKey)) return [];
+
     const fromId = String(feature.properties?.from ?? '');
     const toId = String(feature.properties?.to ?? '');
     const fromWeight = stationWeights.get(fromId) ?? 0;
     const toWeight = stationWeights.get(toId) ?? 0;
     const isClosedSegment = activeClosures.has(fromId) || activeClosures.has(toId);
     const affected = isClosedSegment || fromWeight >= networkAffectThreshold || toWeight >= networkAffectThreshold ? 1 : 0;
-    return { type: 'Feature', properties: { ...feature.properties, affected }, geometry: feature.geometry };
+    return [{ type: 'Feature', properties: { ...feature.properties, affected, systemKey }, geometry: feature.geometry }];
   }),
 });
 
@@ -228,16 +226,19 @@ const stationSourceFromData = (
   stations: StationImpact[],
   activeClosures: Set<string>,
   selectedId: string | null,
+  visibleSystems: Set<string>,
 ): FeatureCollection<Point> => ({
   type: 'FeatureCollection',
-  features: stations.map<Feature<Point>>((station) => {
+  features: stations.flatMap<Feature<Point>>((station) => {
     const systemKey = inferSystemKey(station);
-    return {
+    if (!visibleSystems.has(systemKey)) return [];
+    return [{
       type: 'Feature',
       properties: {
         id: station.id,
         name: station.name,
         lineColor: station.lineColor,
+        systemKey,
         systemColor: systemColorByKey[systemKey] ?? '#64748b',
         modeShort: systemMarkerCodeByKey[systemKey] ?? 'TP',
         active: activeClosures.has(station.id) ? 1 : 0,
@@ -246,9 +247,240 @@ const stationSourceFromData = (
         impactedPeople: station.impactedPeople,
       },
       geometry: { type: 'Point', coordinates: station.coordinates },
-    };
+    }];
   }),
 });
+
+const metersPerDegreeLat = 111_320;
+
+const metersToLatDegrees = (meters: number) => meters / metersPerDegreeLat;
+
+const metersToLngDegrees = (meters: number, latitude: number) => {
+  const cosLat = Math.cos((latitude * Math.PI) / 180);
+  return meters / Math.max(1e-6, metersPerDegreeLat * cosLat);
+};
+
+const distanceMeters = ([lngA, latA]: [number, number], [lngB, latB]: [number, number]) => {
+  const midLatRad = (((latA + latB) / 2) * Math.PI) / 180;
+  const deltaLng = (lngB - lngA) * Math.cos(midLatRad);
+  const deltaLat = latB - latA;
+  return Math.hypot(deltaLng, deltaLat) * metersPerDegreeLat;
+};
+
+const hexagonPolygon = ([lng, lat]: [number, number], radiusMeters: number): Polygon => {
+  const coordinates: [number, number][] = [];
+  for (let index = 0; index < 6; index += 1) {
+    const angle = Math.PI / 6 + (Math.PI / 3) * index;
+    const offsetX = Math.cos(angle) * radiusMeters;
+    const offsetY = Math.sin(angle) * radiusMeters;
+    coordinates.push([
+      lng + metersToLngDegrees(offsetX, lat),
+      lat + metersToLatDegrees(offsetY),
+    ]);
+  }
+  coordinates.push(coordinates[0]);
+
+  return {
+    type: 'Polygon',
+    coordinates: [coordinates],
+  };
+};
+
+const pointToSegmentDistanceMeters = (
+  point: [number, number],
+  start: [number, number],
+  end: [number, number],
+) => {
+  const centerLat = (point[1] + start[1] + end[1]) / 3;
+  const cosLat = Math.cos((centerLat * Math.PI) / 180);
+  const project = ([lng, lat]: [number, number]) => ({
+    x: lng * cosLat * metersPerDegreeLat,
+    y: lat * metersPerDegreeLat,
+  });
+
+  const p = project(point);
+  const a = project(start);
+  const b = project(end);
+  const abX = b.x - a.x;
+  const abY = b.y - a.y;
+  const abLengthSquared = abX * abX + abY * abY;
+  if (abLengthSquared === 0) return Math.hypot(p.x - a.x, p.y - a.y);
+
+  const t = Math.max(0, Math.min(1, ((p.x - a.x) * abX + (p.y - a.y) * abY) / abLengthSquared));
+  const closestX = a.x + abX * t;
+  const closestY = a.y + abY * t;
+  return Math.hypot(p.x - closestX, p.y - closestY);
+};
+
+type ImpactSurfaceProperties = {
+  immediateIntensity: number;
+  systemicIntensity: number;
+  combinedIntensity: number;
+};
+
+type ImpactNodeInfluencer = {
+  coordinates: [number, number];
+  immediateIntensity: number;
+  immediateRadiusMeters: number;
+  systemicIntensity: number;
+  systemicRadiusMeters: number;
+};
+
+type ImpactSegmentInfluencer = {
+  coordinates: [number, number][];
+  intensity: number;
+  radiusMeters: number;
+};
+
+const emptyLineStringCollection: FeatureCollection<LineString> = {
+  type: 'FeatureCollection',
+  features: [],
+};
+
+const emptyPointCollection: FeatureCollection<Point> = {
+  type: 'FeatureCollection',
+  features: [],
+};
+
+const emptyPolygonCollection: FeatureCollection<Polygon> = {
+  type: 'FeatureCollection',
+  features: [],
+};
+
+const gaussianContribution = (distance: number, amplitude: number, radiusMeters: number) => {
+  if (distance > radiusMeters * 1.8) return 0;
+  const sigma = radiusMeters / 2.6;
+  return amplitude * Math.exp(-(distance * distance) / (2 * sigma * sigma));
+};
+
+const impactHeatmapSourceFromData = (
+  stations: StationImpact[],
+  metroNetwork: FeatureCollection<LineString>,
+  stationWeights: Map<string, number>,
+  activeClosures: Set<string>,
+): FeatureCollection<Polygon> => {
+  const impactedStations = stations.filter((station) => activeClosures.has(station.id) || (stationWeights.get(station.id) ?? 0) > 0.08);
+  if (impactedStations.length === 0) return { type: 'FeatureCollection', features: [] };
+
+  const maxImpactedPeople = Math.max(...impactedStations.map((station) => station.impactedPeople), 1);
+  const maxDailyRidership = Math.max(...impactedStations.map((station) => station.dailyRidership), 1);
+
+  const nodeInfluencers: ImpactNodeInfluencer[] = impactedStations.map((station) => {
+    const networkWeight = stationWeights.get(station.id) ?? 0;
+    const impactedSignal = station.impactedPeople / maxImpactedPeople;
+    const ridershipSignal = station.dailyRidership / maxDailyRidership;
+    const isClosed = activeClosures.has(station.id);
+    const socialPressure = (station.territorial?.socialPressurePct ?? 0) / 100;
+    const roadBarrier = (station.territorial?.roadBarrierScorePct ?? 0) / 100;
+    const cycleRelief = Math.min(0.22, station.cycleKmNearby * 0.035 + station.nearbyEcobici * 0.006 + station.resilienceScore / 520);
+
+    const immediateIntensity = isClosed
+      ? Math.min(1, impactedSignal * 0.68 + ridershipSignal * 0.18 + socialPressure * 0.2 + roadBarrier * 0.12 + 0.22 - cycleRelief * 0.45)
+      : Math.min(0.34, networkWeight * 0.25 + impactedSignal * 0.1 + socialPressure * 0.08 + roadBarrier * 0.08 - cycleRelief * 0.2);
+
+    const systemicIntensity = Math.min(1, impactedSignal * 0.18 + ridershipSignal * 0.16 + networkWeight * 0.62 + socialPressure * 0.18 + roadBarrier * 0.24 + (isClosed ? 0.14 : 0) - cycleRelief * 0.3);
+
+    const immediateRadiusMeters = 520 + impactedSignal * 640 + ridershipSignal * 220 + socialPressure * 160 + roadBarrier * 220 + (isClosed ? 240 : 0) - cycleRelief * 180;
+    const systemicRadiusMeters = 760 + impactedSignal * 880 + ridershipSignal * 340 + networkWeight * 1160 + socialPressure * 280 + roadBarrier * 360 + (isClosed ? 220 : 0) - cycleRelief * 220;
+
+    return {
+      coordinates: station.coordinates,
+      immediateIntensity,
+      immediateRadiusMeters,
+      systemicIntensity,
+      systemicRadiusMeters,
+    };
+  });
+
+  const segmentInfluencers: ImpactSegmentInfluencer[] = metroNetwork.features.flatMap((feature) => {
+    const fromId = String(feature.properties?.from ?? '');
+    const toId = String(feature.properties?.to ?? '');
+    const fromWeight = stationWeights.get(fromId) ?? 0;
+    const toWeight = stationWeights.get(toId) ?? 0;
+    const isClosedSegment = activeClosures.has(fromId) || activeClosures.has(toId);
+    const segmentStrength = Math.max(fromWeight, toWeight, isClosedSegment ? 0.72 : 0);
+    if (segmentStrength < 0.18) return [];
+
+    return [{
+      coordinates: feature.geometry.coordinates as [number, number][],
+      intensity: Math.min(1, segmentStrength * 0.82 + (isClosedSegment ? 0.14 : 0)),
+      radiusMeters: 220 + segmentStrength * 460,
+    }];
+  });
+
+  const nodeBoundsPaddingMeters = Math.max(...nodeInfluencers.map((station) => station.systemicRadiusMeters), 900) + 450;
+  const networkCoordinates = segmentInfluencers.flatMap((segment) => segment.coordinates);
+  const allCoordinates = [...nodeInfluencers.map((station) => station.coordinates), ...networkCoordinates];
+  const minLng = Math.min(...allCoordinates.map(([lng, lat]) => lng - metersToLngDegrees(nodeBoundsPaddingMeters, lat)));
+  const maxLng = Math.max(...allCoordinates.map(([lng, lat]) => lng + metersToLngDegrees(nodeBoundsPaddingMeters, lat)));
+  const minLat = Math.min(...allCoordinates.map(([, lat]) => lat - metersToLatDegrees(nodeBoundsPaddingMeters)));
+  const maxLat = Math.max(...allCoordinates.map(([, lat]) => lat + metersToLatDegrees(nodeBoundsPaddingMeters)));
+
+  const centerLat = (minLat + maxLat) / 2;
+  const widthMeters = Math.max(1, distanceMeters([minLng, centerLat], [maxLng, centerLat]));
+  const heightMeters = Math.max(1, distanceMeters([minLng, minLat], [minLng, maxLat]));
+  const targetCells = 4200;
+  const rawCellSizeMeters = Math.sqrt((widthMeters * heightMeters) / targetCells);
+  const cellSizeMeters = Math.min(300, Math.max(120, rawCellSizeMeters));
+  const hexRadiusMeters = cellSizeMeters / 2;
+  const rowStepMeters = 1.5 * hexRadiusMeters;
+  const columnStepMeters = Math.sqrt(3) * hexRadiusMeters;
+  const latStep = metersToLatDegrees(rowStepMeters);
+
+  const features: Array<Feature<Polygon, ImpactSurfaceProperties>> = [];
+  let rowIndex = 0;
+
+  for (let lat = minLat; lat <= maxLat; lat += latStep) {
+    const lngStep = metersToLngDegrees(columnStepMeters, lat);
+    const rowOffset = rowIndex % 2 === 0 ? 0 : metersToLngDegrees(columnStepMeters / 2, lat);
+
+    for (let lng = minLng + rowOffset; lng <= maxLng; lng += lngStep) {
+      const point: [number, number] = [lng, lat];
+      const immediateIntensity = nodeInfluencers.reduce((sum, station) => {
+        const distance = distanceMeters(point, station.coordinates);
+        return sum + gaussianContribution(distance, station.immediateIntensity, station.immediateRadiusMeters);
+      }, 0);
+
+      const nodeSystemicIntensity = nodeInfluencers.reduce((sum, station) => {
+        const distance = distanceMeters(point, station.coordinates);
+        return sum + gaussianContribution(distance, station.systemicIntensity, station.systemicRadiusMeters);
+      }, 0);
+
+      const corridorIntensity = segmentInfluencers.reduce((sum, segment) => {
+        let bestDistance = Number.POSITIVE_INFINITY;
+        for (let index = 0; index < segment.coordinates.length - 1; index += 1) {
+          const start = segment.coordinates[index];
+          const end = segment.coordinates[index + 1];
+          bestDistance = Math.min(bestDistance, pointToSegmentDistanceMeters(point, start, end));
+        }
+        return sum + gaussianContribution(bestDistance, segment.intensity, segment.radiusMeters);
+      }, 0);
+
+      const normalizedImmediateIntensity = Math.min(1, immediateIntensity);
+      const normalizedSystemicIntensity = Math.min(1, nodeSystemicIntensity * 0.44 + corridorIntensity * 0.9);
+      const combinedIntensity = Math.min(1, normalizedImmediateIntensity * 0.7 + normalizedSystemicIntensity * 0.92);
+
+      if (combinedIntensity < 0.05) continue;
+
+      features.push({
+        type: 'Feature',
+        properties: {
+          immediateIntensity: normalizedImmediateIntensity,
+          systemicIntensity: normalizedSystemicIntensity,
+          combinedIntensity,
+        },
+        geometry: hexagonPolygon(point, hexRadiusMeters),
+      });
+    }
+
+    rowIndex += 1;
+  }
+
+  return {
+    type: 'FeatureCollection',
+    features,
+  };
+};
 
 // ============================================================
 // UI SUB-COMPONENTS
@@ -811,7 +1043,7 @@ function NodePopup({ station, isActive, networkWeight, onToggleClosure, onClose 
             {[
               ['Ecobici a 800m', String(station.nearbyEcobici), 'var(--green)'],
               ['Km ciclistas', `${station.cycleKmNearby} km`, 'var(--cyan)'],
-              ['Transbordo', String(station.transferPenalty), 'var(--amber)'],
+              ['Km viales prim.', `${station.territorial.primaryRoadKmNearby} km`, 'var(--amber)'],
               ['Demanda/día', formatCompact(station.dailyRidership), 'var(--ink-2)'],
             ].map(([k, v, c]) => (
               <div key={k} style={{ padding: '8px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.02)', border: '1px solid var(--line)' }}>
@@ -832,6 +1064,27 @@ function NodePopup({ station, isActive, networkWeight, onToggleClosure, onClose 
           </p>
           <p>
             Vulnerables = {numberFormatter.format(station.impactedPeople)} × factor social {formatPct(station.vulnerabilitySharePct)}
+          </p>
+          <p>
+            Presión territorial = AGEB {formatPct(station.territorial.socialPressurePct)} + barrera vial {formatPct(station.territorial.roadBarrierScorePct)}
+          </p>
+          <p>
+            Resiliencia = alivio ciclista {station.cycleKmNearby} km + Ecobici {station.nearbyEcobici} + score {station.resilienceScore}/100
+          </p>
+        </div>
+
+        <div className="trace-card">
+          <p style={{ fontSize: 10, fontWeight: 600, color: 'var(--ink-2)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6 }}>
+            Contexto territorial
+          </p>
+          <p>
+            AGEB = {station.territorial.agebCode || 'sin match'} · match {station.territorial.territorialMatchType}
+          </p>
+          <p>
+            Población local = {numberFormatter.format(station.territorial.agebPopulation)} · vialidades {station.territorial.primaryRoadCount}
+          </p>
+          <p>
+            Acceso controlado = {station.territorial.accessControlledRoadCount} · transbordo = {station.transferPenalty}
           </p>
         </div>
 
@@ -866,17 +1119,23 @@ function MetricTile({
 }
 
 // ---------- LAYERS PANEL ----------
+type GeneralLayerKey = Exclude<keyof LayerState, 'networkSystems'>;
+
 interface LayersPanelProps {
   layers: LayerState;
-  onToggle: (key: keyof LayerState) => void;
+  onToggle: (key: GeneralLayerKey) => void;
+  networkItems: Array<{ key: string; label: string; meta: string }>;
+  onToggleNetworkSystem: (key: string) => void;
 }
 
-function LayersPanel({ layers, onToggle }: LayersPanelProps) {
+function LayersPanel({ layers, onToggle, networkItems, onToggleNetworkSystem }: LayersPanelProps) {
   const [open, setOpen] = useState(false);
-  const activeCount = Object.values(layers).filter(Boolean).length;
+  const activeCount = [layers.impactImmediate, layers.impactSystemic, layers.ecobici, layers.cycleInfra]
+    .filter(Boolean).length + networkItems.filter((item) => layers.networkSystems[item.key]).length;
 
-  const transitItems: { k: keyof LayerState | '__placeholder__'; label: string; meta: string }[] = [
-    { k: 'metroNetwork', label: 'Red multimodal', meta: '12 líneas · 195 est.' },
+  const mapItems: { k: GeneralLayerKey; label: string; meta: string }[] = [
+    { k: 'impactImmediate', label: 'Impacto inmediato', meta: 'refuerzo local de severidad' },
+    { k: 'impactSystemic', label: 'Impacto sistémico', meta: 'base territorial por corredores' },
     { k: 'ecobici',      label: 'Ecobici',         meta: 'cicloestaciones' },
     { k: 'cycleInfra',  label: 'Red ciclista',    meta: 'infraestructura ciclista' },
   ];
@@ -898,16 +1157,16 @@ function LayersPanel({ layers, onToggle }: LayersPanelProps) {
             </button>
           </div>
           <div className="layers-popup-body">
-            <span className="layers-group-label">Transporte y red</span>
-            {transitItems.map((it) => {
-              const isOn = it.k !== '__placeholder__' ? layers[it.k as keyof LayerState] : false;
+            <span className="layers-group-label">Capas generales</span>
+            {mapItems.map((it) => {
+              const isOn = layers[it.k];
               const color = 'var(--cyan)';
               return (
                 <button
                   key={it.k}
                   type="button"
                   className="layer-row"
-                  onClick={() => it.k !== '__placeholder__' && onToggle(it.k as keyof LayerState)}
+                  onClick={() => onToggle(it.k)}
                   aria-pressed={isOn}
                 >
                   <span
@@ -935,6 +1194,47 @@ function LayersPanel({ layers, onToggle }: LayersPanelProps) {
                 </button>
               );
             })}
+            {networkItems.length > 0 && (
+              <>
+                <span className="layers-group-label">Sistemas de la red</span>
+                {networkItems.map((it) => {
+                  const isOn = layers.networkSystems[it.key] ?? false;
+                  const color = systemColorByKey[it.key] ?? 'var(--cyan)';
+                  return (
+                    <button
+                      key={it.key}
+                      type="button"
+                      className="layer-row"
+                      onClick={() => onToggleNetworkSystem(it.key)}
+                      aria-pressed={isOn}
+                    >
+                      <span
+                        className="layer-dot"
+                        style={{
+                          background: isOn ? color : '#2E3A55',
+                          boxShadow: isOn ? `0 0 8px ${color}` : 'none',
+                        }}
+                        aria-hidden="true"
+                      />
+                      <div className="layer-row-info">
+                        <span className="layer-row-label">{it.label}</span>
+                        <span className="layer-row-meta">{it.meta}</span>
+                      </div>
+                      <span
+                        className="layer-badge"
+                        style={{
+                          color:       isOn ? 'var(--green)' : 'var(--ink-dim)',
+                          background:  isOn ? 'rgba(16,217,107,0.12)' : 'rgba(255,255,255,0.03)',
+                          border:      `1px solid ${isOn ? 'rgba(16,217,107,0.35)' : 'rgba(255,255,255,0.08)'}`,
+                        }}
+                      >
+                        {isOn ? 'ON' : 'OFF'}
+                      </span>
+                    </button>
+                  );
+                })}
+              </>
+            )}
           </div>
         </div>
       )}
@@ -968,6 +1268,54 @@ function BottomStatus() {
   );
 }
 
+function ImpactLegend({ layers }: { layers: LayerState }) {
+  if (!layers.impactImmediate && !layers.impactSystemic) return null;
+
+  return (
+    <div className="impact-legend-bar" aria-label="Escala de afectación acumulada">
+      <div className="impact-legend-bar__head">
+        <p className="impact-legend-bar__title">Afectación acumulada</p>
+        <div className="impact-legend-info">
+          <button
+            type="button"
+            className="impact-legend-info__trigger"
+            aria-label="Ver detalle de la afectación acumulada"
+          >
+            i
+          </button>
+          <div className="impact-legend-info__tooltip" role="tooltip">
+            <p className="impact-legend-copy">
+              La severidad sube cuando se combinan la base sistémica de corredores y el refuerzo inmediato alrededor del cierre.
+            </p>
+            <div className="impact-legend-rows">
+              <div className="impact-legend-row">
+                <span className="impact-legend-swatch impact-legend-swatch-systemic" />
+                <div>
+                  <strong>Base sistémica</strong>
+                  <small>propagación por conectividad y corredores</small>
+                </div>
+              </div>
+              <div className="impact-legend-row">
+                <span className="impact-legend-swatch impact-legend-swatch-immediate" />
+                <div>
+                  <strong>Refuerzo inmediato</strong>
+                  <small>presión local por cierre, afluencia y proximidad</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="impact-legend-scale">
+        <span>Baja</span>
+        <div className="impact-legend-gradient" />
+        <span>Crítica</span>
+      </div>
+    </div>
+  );
+}
+
 // ============================================================
 // APP
 // ============================================================
@@ -986,6 +1334,10 @@ function App() {
   const [nodeSystemFilter, setNodeSystemFilter] = useState('all');
 
   const activeClosureIds = closuresByScenario[selectedScenario];
+  const visibleNetworkSystems = useMemo(
+    () => new Set(Object.entries(layers.networkSystems).filter(([, isVisible]) => isVisible).map(([key]) => key)),
+    [layers.networkSystems],
+  );
 
   useEffect(() => {
     let active = true;
@@ -1081,8 +1433,36 @@ function App() {
   );
 
   const stationSource = useMemo(
-    () => stationSourceFromData(data?.stations ?? [], activeClosures, selectedStation?.id ?? null),
-    [activeClosures, data, selectedStation?.id],
+    () => stationSourceFromData(data?.stations ?? [], activeClosures, selectedStation?.id ?? null, visibleNetworkSystems),
+    [activeClosures, data, selectedStation?.id, visibleNetworkSystems],
+  );
+
+  const networkLayerItems = useMemo(() => {
+    const stationCounts = new Map<string, number>();
+    for (const station of data?.stations ?? []) {
+      const key = inferSystemKey(station);
+      if (key === 'ecobici') continue;
+      stationCounts.set(key, (stationCounts.get(key) ?? 0) + 1);
+    }
+
+    const segmentCounts = new Map<string, number>();
+    for (const feature of data?.metroNetwork.features ?? []) {
+      const key = normalizeSystemKey(String(feature.properties?.mode ?? 'otro'));
+      segmentCounts.set(key, (segmentCounts.get(key) ?? 0) + 1);
+    }
+
+    return networkSystemKeys
+      .filter((key) => (stationCounts.get(key) ?? 0) > 0 || (segmentCounts.get(key) ?? 0) > 0)
+      .map((key) => ({
+        key,
+        label: systemLabelByKey[key] ?? key,
+        meta: `${numberFormatter.format(stationCounts.get(key) ?? 0)} est. · ${numberFormatter.format(segmentCounts.get(key) ?? 0)} tramos`,
+      }));
+  }, [data?.metroNetwork.features, data?.stations]);
+
+  const impactHeatmapSource = useMemo(
+    () => impactHeatmapSourceFromData(data?.stations ?? [], data?.metroNetwork ?? { type: 'FeatureCollection', features: [] }, networkStationWeights, activeClosures),
+    [activeClosures, data?.metroNetwork, data?.stations, networkStationWeights],
   );
 
   const closedStations = useMemo(
@@ -1151,8 +1531,9 @@ function App() {
         data?.metroNetwork ?? { type: 'FeatureCollection', features: [] },
         networkStationWeights,
         activeClosures,
+        visibleNetworkSystems,
       ),
-    [activeClosures, data, networkStationWeights],
+    [activeClosures, data, networkStationWeights, visibleNetworkSystems],
   );
 
   // Map init
@@ -1176,7 +1557,7 @@ function App() {
       map.addSource('cycle-infra', { type: 'geojson', data: data.cycleInfra } satisfies GeoJSONSourceSpecification);
       map.addLayer({ id: 'cycle-infra', type: 'line', source: 'cycle-infra', paint: { 'line-color': '#22c55e', 'line-width': 2.5, 'line-opacity': 0.8 } });
 
-      map.addSource('metro-network', { type: 'geojson', data: networkSource } satisfies GeoJSONSourceSpecification);
+      map.addSource('metro-network', { type: 'geojson', data: emptyLineStringCollection } satisfies GeoJSONSourceSpecification);
       map.addLayer({
         id: 'metro-network-base', type: 'line', source: 'metro-network',
         layout: { 'line-cap': 'round', 'line-join': 'round' },
@@ -1189,10 +1570,98 @@ function App() {
         paint: { 'line-color': ['coalesce', ['get', 'lineColor'], '#f97316'], 'line-width': ['interpolate', ['linear'], ['zoom'], 8, 5.4, 12, 6.3, 16, 7.2], 'line-opacity': 0.9 },
       });
 
+      map.addSource('impact-heatmap', { type: 'geojson', data: emptyPolygonCollection } satisfies GeoJSONSourceSpecification);
+      map.addLayer({
+        id: 'impact-systemic',
+        type: 'fill',
+        source: 'impact-heatmap',
+        paint: {
+          'fill-color': [
+            'interpolate',
+            ['linear'],
+            ['coalesce', ['get', 'combinedIntensity'], 0],
+            0,
+            'rgba(2,6,23,0)',
+            0.12,
+            'rgba(250,204,21,0.14)',
+            0.28,
+            'rgba(249,115,22,0.2)',
+            0.48,
+            'rgba(249,115,22,0.28)',
+            0.68,
+            'rgba(239,68,68,0.34)',
+            0.84,
+            'rgba(225,29,72,0.42)',
+            1,
+            'rgba(190,24,93,0.48)',
+          ],
+          'fill-opacity': [
+            'interpolate',
+            ['linear'],
+            ['coalesce', ['get', 'systemicIntensity'], 0],
+            0,
+            0,
+            0.12,
+            0.08,
+            0.28,
+            0.12,
+            0.48,
+            0.18,
+            0.68,
+            0.24,
+            0.84,
+            0.3,
+            1,
+            0.34,
+          ],
+        },
+      });
+      map.addLayer({
+        id: 'impact-immediate',
+        type: 'fill',
+        source: 'impact-heatmap',
+        paint: {
+          'fill-color': [
+            'interpolate',
+            ['linear'],
+            ['coalesce', ['get', 'combinedIntensity'], 0],
+            0,
+            'rgba(2,6,23,0)',
+            0.14,
+            'rgba(250,204,21,0.16)',
+            0.34,
+            'rgba(249,115,22,0.28)',
+            0.55,
+            'rgba(239,68,68,0.42)',
+            0.78,
+            'rgba(225,29,72,0.6)',
+            1,
+            'rgba(190,24,93,0.76)',
+          ],
+          'fill-opacity': [
+            'interpolate',
+            ['linear'],
+            ['coalesce', ['get', 'immediateIntensity'], 0],
+            0,
+            0,
+            0.14,
+            0.08,
+            0.34,
+            0.16,
+            0.55,
+            0.26,
+            0.78,
+            0.38,
+            1,
+            0.48,
+          ],
+        },
+      });
+
       map.addSource('ecobici', { type: 'geojson', data: data.ecobici } satisfies GeoJSONSourceSpecification);
       map.addLayer({ id: 'ecobici', type: 'circle', source: 'ecobici', paint: { 'circle-radius': 3, 'circle-color': '#2dd4bf', 'circle-opacity': 0.72, 'circle-stroke-width': 1, 'circle-stroke-color': '#06221d' } });
 
-      map.addSource('stations', { type: 'geojson', data: stationSource } satisfies GeoJSONSourceSpecification);
+      map.addSource('stations', { type: 'geojson', data: emptyPointCollection } satisfies GeoJSONSourceSpecification);
       map.addLayer({ id: 'station-shadow', type: 'circle', source: 'stations', paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 9, 8, 12, 12, 15, 16], 'circle-color': '#020617', 'circle-opacity': 0.35, 'circle-blur': 0.65 } });
       map.addLayer({ id: 'station-halo', type: 'circle', source: 'stations', paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 9, ['case', ['==', ['get', 'selected'], 1], 16, ['==', ['get', 'active'], 1], 13, 11], 12, ['case', ['==', ['get', 'selected'], 1], 23, ['==', ['get', 'active'], 1], 19, 16], 15, ['case', ['==', ['get', 'selected'], 1], 30, ['==', ['get', 'active'], 1], 24, 20]], 'circle-color': ['coalesce', ['get', 'systemColor'], '#22d3ee'], 'circle-opacity': ['case', ['==', ['get', 'selected'], 1], 0.55, ['==', ['get', 'active'], 1], 0.42, 0.28], 'circle-blur': 0.35 } });
       map.addLayer({ id: 'station-hit-area', type: 'circle', source: 'stations', paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 9, 12, 12, 18, 15, 24], 'circle-color': '#ffffff', 'circle-opacity': 0.01 } });
@@ -1233,7 +1702,8 @@ function App() {
     if (!map || !map.isStyleLoaded() || !data) return;
     (map.getSource('stations') as maplibregl.GeoJSONSource | undefined)?.setData(stationSource);
     (map.getSource('metro-network') as maplibregl.GeoJSONSource | undefined)?.setData(networkSource);
-  }, [data, networkSource, stationSource]);
+    (map.getSource('impact-heatmap') as maplibregl.GeoJSONSource | undefined)?.setData(impactHeatmapSource);
+  }, [data, impactHeatmapSource, networkSource, stationSource]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -1266,11 +1736,15 @@ function App() {
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !map.isStyleLoaded()) return;
+    if (map.getLayer('impact-immediate')) map.setLayoutProperty('impact-immediate', 'visibility', layers.impactImmediate ? 'visible' : 'none');
+    if (map.getLayer('impact-systemic')) map.setLayoutProperty('impact-systemic', 'visibility', layers.impactSystemic ? 'visible' : 'none');
     if (map.getLayer('ecobici')) map.setLayoutProperty('ecobici', 'visibility', layers.ecobici ? 'visible' : 'none');
     if (map.getLayer('cycle-infra')) map.setLayoutProperty('cycle-infra', 'visibility', layers.cycleInfra ? 'visible' : 'none');
-    if (map.getLayer('metro-network-base')) map.setLayoutProperty('metro-network-base', 'visibility', layers.metroNetwork ? 'visible' : 'none');
-    if (map.getLayer('metro-network-affected')) map.setLayoutProperty('metro-network-affected', 'visibility', layers.metroNetwork ? 'visible' : 'none');
-  }, [layers]);
+    if (selectedMarkerRef.current) {
+      const selectedSystemKey = selectedStation ? inferSystemKey(selectedStation) : null;
+      selectedMarkerRef.current.getElement().style.display = !selectedSystemKey || visibleNetworkSystems.has(selectedSystemKey) ? '' : 'none';
+    }
+  }, [layers, selectedStation, visibleNetworkSystems]);
 
   // Pan to selected station
   useEffect(() => {
@@ -1298,7 +1772,7 @@ function App() {
       duration: 700,
       essential: true,
     });
-  }, [selectedStation?.id]);
+  }, [selectedStation]);
 
   const toggleClosure = (stationId: string) => {
     setClosuresByScenario((current) => {
@@ -1310,8 +1784,18 @@ function App() {
     });
   };
 
-  const toggleLayer = (key: keyof LayerState) => {
+  const toggleLayer = (key: GeneralLayerKey) => {
     setLayers((current) => ({ ...current, [key]: !current[key] }));
+  };
+
+  const toggleNetworkSystem = (key: string) => {
+    setLayers((current) => ({
+      ...current,
+      networkSystems: {
+        ...current.networkSystems,
+        [key]: !(current.networkSystems[key] ?? true),
+      },
+    }));
   };
 
   const clearScenario = () => {
@@ -1377,7 +1861,13 @@ function App() {
             />
           )}
 
-          <LayersPanel layers={layers} onToggle={toggleLayer} />
+          <LayersPanel
+            layers={layers}
+            onToggle={toggleLayer}
+            networkItems={networkLayerItems}
+            onToggleNetworkSystem={toggleNetworkSystem}
+          />
+          <ImpactLegend layers={layers} />
           <BottomStatus />
         </main>
       </div>

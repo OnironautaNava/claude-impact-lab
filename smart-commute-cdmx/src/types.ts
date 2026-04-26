@@ -19,6 +19,17 @@ export interface StationImpact {
   nearestAlternative: string;
   nearestAlternativeDistanceM: number;
   resilienceScore: number;
+  territorial: {
+    agebCode: string;
+    agebPopulation: number;
+    socialPressurePct: number;
+    roadBarrierScorePct: number;
+    primaryRoadKmNearby: number;
+    primaryRoadCount: number;
+    accessControlledRoadCount: number;
+    territorialCoverage: number;
+    territorialMatchType: 'exact' | 'nearest' | 'none';
+  };
 }
 
 export interface LineRidershipSummary {
@@ -56,6 +67,12 @@ export interface MvpData {
     topMetrobusLines: LineRidershipSummary[];
     systemDailyRidership?: SystemRidershipSummary[];
     topNetworkLines?: LineRidershipSummary[];
+    territorialEnrichment?: {
+      agebDemographics: number;
+      primaryRoadSegments: number;
+      cycleInfraSegments: number;
+      ecobiciStations: number;
+    };
   };
   stations: StationImpact[];
   ecobici: FeatureCollection<Point>;
@@ -64,7 +81,9 @@ export interface MvpData {
 }
 
 export interface LayerState {
+  impactImmediate: boolean;
+  impactSystemic: boolean;
   ecobici: boolean;
   cycleInfra: boolean;
-  metroNetwork: boolean;
+  networkSystems: Record<string, boolean>;
 }
