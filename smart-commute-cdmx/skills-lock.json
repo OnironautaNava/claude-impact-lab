@@ -1,6 +1,11 @@
 {
   "version": 1,
   "skills": {
+    "ETL Pipeline": {
+      "source": "claude-office-skills/skills",
+      "sourceType": "github",
+      "computedHash": "4b34d789f266c799bc08cab14631c4f41938fe3241bb3849d869f5d5199113ab"
+    },
     "accessibility": {
       "source": "addyosmani/web-quality-skills",
       "sourceType": "github",
@@ -60,6 +65,11 @@
       "source": "antfu/skills",
       "sourceType": "github",
       "computedHash": "1cdc4bbecaa89544e6ef92566b015db989994bf90c4472683ac64f7a114dc3af"
+    },
+    "vitest": {
+      "source": "antfu/skills",
+      "sourceType": "github",
+      "computedHash": "0efd9cf8c56aada060d418d009cfe621a7915d0c73a958fe611985bc0c2fa4b8"
     }
   }
 }

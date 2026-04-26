@@ -25,6 +25,16 @@ LOCAL_DATA_CONFIG = ROOT_DIR / "data-source.local"
 OUTPUT_DIR = ROOT_DIR / "public" / "data"
 MVP_PATH = OUTPUT_DIR / "mvp-data.json"
 GTFS_CANDIDATES = [Path("raw-data/gtfs/gtfs_cdmx.zip")]
+AGEB_DEMOGRAPHIC_CANDIDATES = [
+    Path(
+        "raw-data/INEGI/caracteristicas-demograficas-AGEB-2020/caractersticas-demogrficas-nivel-ageb.json"
+    ),
+]
+PRIMARY_ROADS_CANDIDATES = [
+    Path(
+        "raw-data/vialidades-primarias/cartography/mapa-de-las-vialidades-primarias-de-la-ciudad-de-mxico-.json"
+    ),
+]
 
 KML_NS = {"k": "http://www.opengis.net/kml/2.2"}
 
@@ -113,10 +123,22 @@ ELECTRIC_SUBSYSTEMS = [
     {
         "mode": "trolebus",
         "label": "Trolebus",
-        "ridership_candidates": [Path("raw-data/transportes-electricos/ste-trolebus/ridership/afluencia_desglosada_trolebus_03_2026.csv")],
+        "ridership_candidates": [
+            Path(
+                "raw-data/transportes-electricos/ste-trolebus/ridership/afluencia_desglosada_trolebus_03_2026.csv"
+            )
+        ],
         "shp_candidates": {
-            "stations": [Path("raw-data/transportes-electricos/cartography/ste_shp/ste_trolebus_shp.zip")],
-            "lines": [Path("raw-data/transportes-electricos/cartography/ste_shp/ste_trolebus_shp.zip")],
+            "stations": [
+                Path(
+                    "raw-data/transportes-electricos/cartography/ste_shp/ste_trolebus_shp.zip"
+                )
+            ],
+            "lines": [
+                Path(
+                    "raw-data/transportes-electricos/cartography/ste_shp/ste_trolebus_shp.zip"
+                )
+            ],
             "station_keywords": ["paradas"],
             "line_keywords": ["lineas"],
         },
@@ -144,10 +166,22 @@ ELECTRIC_SUBSYSTEMS = [
     {
         "mode": "cablebus",
         "label": "Cablebus",
-        "ridership_candidates": [Path("raw-data/transportes-electricos/cablebus/ridership/afluencia_desglosada_cb_03_2026.csv")],
+        "ridership_candidates": [
+            Path(
+                "raw-data/transportes-electricos/cablebus/ridership/afluencia_desglosada_cb_03_2026.csv"
+            )
+        ],
         "shp_candidates": {
-            "stations": [Path("raw-data/transportes-electricos/cartography/ste_shp/ste_cablebus_shp.zip")],
-            "lines": [Path("raw-data/transportes-electricos/cartography/ste_shp/ste_cablebus_shp.zip")],
+            "stations": [
+                Path(
+                    "raw-data/transportes-electricos/cartography/ste_shp/ste_cablebus_shp.zip"
+                )
+            ],
+            "lines": [
+                Path(
+                    "raw-data/transportes-electricos/cartography/ste_shp/ste_cablebus_shp.zip"
+                )
+            ],
             "station_keywords": ["estaciones"],
             "line_keywords": ["lineas"],
         },
@@ -171,10 +205,22 @@ ELECTRIC_SUBSYSTEMS = [
     {
         "mode": "trenligero",
         "label": "Tren Ligero",
-        "ridership_candidates": [Path("raw-data/transportes-electricos/tren-ligero/ridership/afluencia_desglosada_tl_03_2026.csv")],
+        "ridership_candidates": [
+            Path(
+                "raw-data/transportes-electricos/tren-ligero/ridership/afluencia_desglosada_tl_03_2026.csv"
+            )
+        ],
         "shp_candidates": {
-            "stations": [Path("raw-data/transportes-electricos/cartography/ste_shp/ste_tren_ligero_shp.zip")],
-            "lines": [Path("raw-data/transportes-electricos/cartography/ste_shp/ste_tren_ligero_shp.zip")],
+            "stations": [
+                Path(
+                    "raw-data/transportes-electricos/cartography/ste_shp/ste_tren_ligero_shp.zip"
+                )
+            ],
+            "lines": [
+                Path(
+                    "raw-data/transportes-electricos/cartography/ste_shp/ste_tren_ligero_shp.zip"
+                )
+            ],
             "station_keywords": ["estaciones"],
             "line_keywords": ["linea"],
         },
@@ -242,7 +288,9 @@ def ensure_extracted_kmz(candidate: Path, member_patterns, cache_dir: Path):
 
     with zipfile.ZipFile(candidate, "r") as archive:
         for member in archive.namelist():
-            if member.endswith("/") or not match_archive_member(member, member_patterns):
+            if member.endswith("/") or not match_archive_member(
+                member, member_patterns
+            ):
                 continue
 
             target_dir = cache_dir / candidate.stem
@@ -294,7 +342,11 @@ def fix_mojibake(value) -> str:
         return ""
     if "�" in trimmed or "Ã" in trimmed or "Â" in trimmed:
         try:
-            return trimmed.encode("latin1", errors="ignore").decode("utf-8", errors="ignore").strip()
+            return (
+                trimmed.encode("latin1", errors="ignore")
+                .decode("utf-8", errors="ignore")
+                .strip()
+            )
         except Exception:
             return trimmed
     return trimmed
@@ -310,7 +362,9 @@ def normalize_text(value) -> str:
 
 def parse_html_description(description) -> dict:
     decoded = html.unescape(description or "")
-    pairs = re.findall(r"<td>([^<]+)</td>\s*<td>([^<]*)</td>", decoded, flags=re.IGNORECASE)
+    pairs = re.findall(
+        r"<td>([^<]+)</td>\s*<td>([^<]*)</td>", decoded, flags=re.IGNORECASE
+    )
     result = {}
     for key, value in pairs:
         result[fix_mojibake(key).upper()] = fix_mojibake(value)
@@ -347,9 +401,13 @@ def read_shp_features(shp_path: Path):
     transformer = None
     if prj_path.exists():
         try:
-            source_crs = CRS.from_wkt(prj_path.read_text(encoding="utf-8", errors="ignore"))
+            source_crs = CRS.from_wkt(
+                prj_path.read_text(encoding="utf-8", errors="ignore")
+            )
             if source_crs.to_epsg() != 4326:
-                transformer = Transformer.from_crs(source_crs, CRS.from_epsg(4326), always_xy=True)
+                transformer = Transformer.from_crs(
+                    source_crs, CRS.from_epsg(4326), always_xy=True
+                )
         except Exception:
             transformer = None
 
@@ -367,13 +425,18 @@ def read_shp_features(shp_path: Path):
             record[key] = fix_mojibake(value) if isinstance(value, str) else value
 
         if shape.shapeType in {1, 11, 21}:
-            coordinates = transform_coordinates([[shape.points[0][0], shape.points[0][1]]], transformer)
+            coordinates = transform_coordinates(
+                [[shape.points[0][0], shape.points[0][1]]], transformer
+            )
             geometry = {"type": "Point", "coordinates": coordinates[0]}
         elif shape.shapeType in {3, 13, 23}:
             parts = list(shape.parts) + [len(shape.points)]
             lines = []
             for index in range(len(parts) - 1):
-                raw_points = [[point[0], point[1]] for point in shape.points[parts[index] : parts[index + 1]]]
+                raw_points = [
+                    [point[0], point[1]]
+                    for point in shape.points[parts[index] : parts[index + 1]]
+                ]
                 transformed_points = transform_coordinates(raw_points, transformer)
                 if len(transformed_points) >= 2:
                     lines.append(transformed_points)
@@ -391,15 +454,26 @@ def read_shp_features(shp_path: Path):
 def read_gtfs_feed(gtfs_zip_path: Path):
     with zipfile.ZipFile(gtfs_zip_path, "r") as archive:
         tables = {}
-        for name in ["agency.txt", "routes.txt", "trips.txt", "stop_times.txt", "stops.txt", "shapes.txt"]:
+        for name in [
+            "agency.txt",
+            "routes.txt",
+            "trips.txt",
+            "stop_times.txt",
+            "stops.txt",
+            "shapes.txt",
+        ]:
             with archive.open(name, "r") as handle:
-                tables[name] = list(csv.DictReader(io.TextIOWrapper(handle, encoding="utf-8-sig")))
+                tables[name] = list(
+                    csv.DictReader(io.TextIOWrapper(handle, encoding="utf-8-sig"))
+                )
     return tables
 
 
 def read_kmz_placemarks(kmz_path: Path):
     with zipfile.ZipFile(kmz_path, "r") as archive:
-        kml_name = next(name for name in archive.namelist() if name.lower().endswith(".kml"))
+        kml_name = next(
+            name for name in archive.namelist() if name.lower().endswith(".kml")
+        )
         root = ET.fromstring(archive.read(kml_name))
 
     placemarks = []
@@ -410,7 +484,9 @@ def read_kmz_placemarks(kmz_path: Path):
         line_nodes = pm.findall(".//k:LineString/k:coordinates", KML_NS)
 
         name = fix_mojibake(name_node.text if name_node is not None else "")
-        properties = parse_html_description(description_node.text if description_node is not None else "")
+        properties = parse_html_description(
+            description_node.text if description_node is not None else ""
+        )
 
         point = None
         if point_node is not None and point_node.text:
@@ -446,6 +522,12 @@ def read_csv_rows(csv_path: Path):
     with csv_path.open("r", encoding="utf-8-sig", newline="") as handle:
         reader = csv.DictReader(handle)
         return [dict(row) for row in reader]
+
+
+def read_json_file(path: Path, default):
+    if not path.exists():
+        return default
+    return json.loads(path.read_text(encoding="utf-8-sig"))
 
 
 def to_int(value, default=0):
@@ -489,7 +571,9 @@ def parse_variant_hints(mode, properties):
     if mode != "trolebus":
         return []
 
-    circuito = fix_mojibake(properties.get("circuito") or properties.get("CIRCUITO") or "")
+    circuito = fix_mojibake(
+        properties.get("circuito") or properties.get("CIRCUITO") or ""
+    )
     tokens = re.findall(r"\b\d+\b", circuito)
     return unique_list([f"circuito:{token}" for token in tokens])
 
@@ -497,11 +581,15 @@ def parse_variant_hints(mode, properties):
 def build_variant_metadata(mode, properties, fallback_name=""):
     ruta = fix_mojibake(properties.get("RUTA") or fallback_name or "")
     tramo = fix_mojibake(properties.get("TRAMO") or "")
-    circuito = fix_mojibake(properties.get("circuito") or properties.get("CIRCUITO") or "")
+    circuito = fix_mojibake(
+        properties.get("circuito") or properties.get("CIRCUITO") or ""
+    )
     hints = parse_variant_hints(mode, properties)
 
     if mode == "trolebus":
-        label_parts = [part for part in [f"Circuito {circuito}" if circuito else "", ruta] if part]
+        label_parts = [
+            part for part in [f"Circuito {circuito}" if circuito else "", ruta] if part
+        ]
         key_parts = hints + [normalize_text(ruta)]
     elif mode == "metrobus":
         label_parts = [part for part in [ruta, tramo] if part]
@@ -554,8 +642,346 @@ def haversine_meters(a, b):
     dlng = (lng2 - lng1) * to_rad
     lat1 = lat1 * to_rad
     lat2 = lat2 * to_rad
-    h = math.sin(dlat / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlng / 2) ** 2
+    h = (
+        math.sin(dlat / 2) ** 2
+        + math.cos(lat1) * math.cos(lat2) * math.sin(dlng / 2) ** 2
+    )
     return 2 * 6371000 * math.asin(math.sqrt(h))
+
+
+def point_bbox(point):
+    lng, lat = point
+    return (lng, lat, lng, lat)
+
+
+def geometry_bbox(geometry):
+    coordinates = []
+    geom_type = geometry.get("type")
+    if geom_type == "Point":
+        coordinates = [geometry.get("coordinates", [0, 0])]
+    elif geom_type == "LineString":
+        coordinates = geometry.get("coordinates", [])
+    elif geom_type == "MultiLineString":
+        coordinates = [
+            point for line in geometry.get("coordinates", []) for point in line
+        ]
+    elif geom_type == "Polygon":
+        coordinates = [
+            point for ring in geometry.get("coordinates", []) for point in ring
+        ]
+    elif geom_type == "MultiPolygon":
+        coordinates = [
+            point
+            for polygon in geometry.get("coordinates", [])
+            for ring in polygon
+            for point in ring
+        ]
+
+    if not coordinates:
+        return None
+
+    lngs = [point[0] for point in coordinates]
+    lats = [point[1] for point in coordinates]
+    return (min(lngs), min(lats), max(lngs), max(lats))
+
+
+def bbox_contains_point(bbox, point, padding_m=0):
+    if bbox is None:
+        return False
+    lng, lat = point
+    lat_pad = padding_m / 111320
+    lng_pad = padding_m / max(1e-6, math.cos(math.radians(lat)) * 111320)
+    return (bbox[0] - lng_pad) <= lng <= (bbox[2] + lng_pad) and (
+        bbox[1] - lat_pad
+    ) <= lat <= (bbox[3] + lat_pad)
+
+
+def point_in_ring(point, ring):
+    for index in range(len(ring)):
+        if (
+            point_to_segment_distance_meters(
+                point, ring[index], ring[(index + 1) % len(ring)]
+            )
+            <= 3
+        ):
+            return True
+
+    x, y = point
+    inside = False
+    for index in range(len(ring)):
+        x1, y1 = ring[index]
+        x2, y2 = ring[(index + 1) % len(ring)]
+        intersects = ((y1 > y) != (y2 > y)) and (
+            x < (x2 - x1) * (y - y1) / max(1e-12, (y2 - y1)) + x1
+        )
+        if intersects:
+            inside = not inside
+    return inside
+
+
+def point_in_geometry(point, geometry):
+    geom_type = geometry.get("type")
+    coordinates = geometry.get("coordinates", [])
+    if geom_type == "Polygon":
+        if not coordinates:
+            return False
+        if not point_in_ring(point, coordinates[0]):
+            return False
+        return not any(point_in_ring(point, hole) for hole in coordinates[1:])
+    if geom_type == "MultiPolygon":
+        return any(
+            point_in_geometry(point, {"type": "Polygon", "coordinates": polygon})
+            for polygon in coordinates
+        )
+    return False
+
+
+def line_segments(geometry):
+    geom_type = geometry.get("type")
+    coordinates = geometry.get("coordinates", [])
+    if geom_type == "LineString":
+        lines = [coordinates]
+    elif geom_type == "MultiLineString":
+        lines = coordinates
+    else:
+        return []
+
+    segments = []
+    for line in lines:
+        for index in range(len(line) - 1):
+            start = line[index]
+            end = line[index + 1]
+            if start != end:
+                segments.append((start, end))
+    return segments
+
+
+def polygon_boundary_segments(geometry):
+    geom_type = geometry.get("type")
+    coordinates = geometry.get("coordinates", [])
+    polygons = (
+        [coordinates]
+        if geom_type == "Polygon"
+        else coordinates
+        if geom_type == "MultiPolygon"
+        else []
+    )
+
+    segments = []
+    for polygon in polygons:
+        for ring in polygon:
+            for index in range(len(ring) - 1):
+                start = ring[index]
+                end = ring[index + 1]
+                if start != end:
+                    segments.append((start, end))
+    return segments
+
+
+def line_length_meters(geometry):
+    return round(
+        sum(haversine_meters(start, end) for start, end in line_segments(geometry))
+    )
+
+
+def project_point(point, reference_lat):
+    lng, lat = point
+    cos_lat = math.cos(math.radians(reference_lat))
+    return (lng * cos_lat * 111320, lat * 111320)
+
+
+def point_to_segment_distance_meters(point, start, end):
+    reference_lat = (point[1] + start[1] + end[1]) / 3
+    px, py = project_point(point, reference_lat)
+    ax, ay = project_point(start, reference_lat)
+    bx, by = project_point(end, reference_lat)
+    abx = bx - ax
+    aby = by - ay
+    length_sq = abx * abx + aby * aby
+    if length_sq == 0:
+        return math.hypot(px - ax, py - ay)
+    t = max(0, min(1, ((px - ax) * abx + (py - ay) * aby) / length_sq))
+    closest_x = ax + abx * t
+    closest_y = ay + aby * t
+    return math.hypot(px - closest_x, py - closest_y)
+
+
+def geometry_distance_meters(point, geometry):
+    if geometry.get("type") in {"Polygon", "MultiPolygon"}:
+        if point_in_geometry(point, geometry):
+            return 0
+        segments = polygon_boundary_segments(geometry)
+    else:
+        segments = line_segments(geometry)
+
+    distances = [
+        point_to_segment_distance_meters(point, start, end) for start, end in segments
+    ]
+    return min(distances) if distances else float("inf")
+
+
+def normalize_rate(value, floor=0, ceiling=100):
+    if value is None:
+        return 0
+    bounded = max(floor, min(ceiling, float(value)))
+    return (bounded - floor) / max(1e-9, ceiling - floor)
+
+
+def load_territorial_context(data_dir: Path, mvp_context):
+    ageb_path = first_existing_path(data_dir, AGEB_DEMOGRAPHIC_CANDIDATES)
+    roads_path = first_existing_path(data_dir, PRIMARY_ROADS_CANDIDATES)
+
+    ageb_geojson = read_json_file(
+        ageb_path, {"type": "FeatureCollection", "features": []}
+    )
+    roads_geojson = read_json_file(
+        roads_path, {"type": "FeatureCollection", "features": []}
+    )
+
+    ageb_features = []
+    for feature in ageb_geojson.get("features", []):
+        geometry = feature.get("geometry") or {}
+        if geometry.get("type") not in {"Polygon", "MultiPolygon"}:
+            continue
+        ageb_features.append(
+            {
+                "properties": feature.get("properties", {}),
+                "geometry": geometry,
+                "bbox": geometry_bbox(geometry),
+            }
+        )
+
+    road_features = []
+    for feature in roads_geojson.get("features", []):
+        geometry = feature.get("geometry") or {}
+        if geometry.get("type") not in {"LineString", "MultiLineString"}:
+            continue
+        road_features.append(
+            {
+                "properties": feature.get("properties", {}),
+                "geometry": geometry,
+                "bbox": geometry_bbox(geometry),
+                "lengthM": line_length_meters(geometry),
+            }
+        )
+
+    cycle_features = []
+    for feature in mvp_context.get("cycleInfra", {}).get("features", []):
+        geometry = feature.get("geometry") or {}
+        if geometry.get("type") not in {"LineString", "MultiLineString"}:
+            continue
+        cycle_features.append(
+            {
+                "geometry": geometry,
+                "bbox": geometry_bbox(geometry),
+                "lengthM": line_length_meters(geometry),
+            }
+        )
+
+    ecobici_points = []
+    for feature in mvp_context.get("ecobici", {}).get("features", []):
+        geometry = feature.get("geometry") or {}
+        if geometry.get("type") == "Point":
+            ecobici_points.append(geometry.get("coordinates", [0, 0]))
+
+    return {
+        "agebPath": ageb_path,
+        "roadsPath": roads_path,
+        "agebFeatures": ageb_features,
+        "roadFeatures": road_features,
+        "cycleFeatures": cycle_features,
+        "ecobiciPoints": ecobici_points,
+    }
+
+
+def territorial_profile_for_station(station, territorial_context):
+    point = station["coordinates"]
+    ageb_match = None
+    territorial_match_type = "none"
+    for feature in territorial_context["agebFeatures"]:
+        if not bbox_contains_point(feature["bbox"], point):
+            continue
+        if point_in_geometry(point, feature["geometry"]):
+            ageb_match = feature
+            territorial_match_type = "exact"
+            break
+
+    if ageb_match is None:
+        nearest_feature = None
+        nearest_distance = float("inf")
+        for feature in territorial_context["agebFeatures"]:
+            if not bbox_contains_point(feature["bbox"], point, padding_m=1800):
+                continue
+            distance = geometry_distance_meters(point, feature["geometry"])
+            if distance < nearest_distance:
+                nearest_feature = feature
+                nearest_distance = distance
+
+        if nearest_feature is not None and nearest_distance <= 1200:
+            ageb_match = nearest_feature
+            territorial_match_type = "nearest"
+
+    ageb_props = ageb_match["properties"] if ageb_match else {}
+    population = to_int(ageb_props.get("pob"), 0)
+    educational_lag = normalize_rate(ageb_props.get("t_p12ym_sl"), 0, 60)
+    no_healthcare = normalize_rate(ageb_props.get("t_sinrl"), 0, 35)
+    indigenous_presence = normalize_rate(ageb_props.get("t_hli"), 0, 12)
+    foreign_born = normalize_rate(ageb_props.get("t_nacoe"), 0, 30)
+    social_pressure = min(
+        1,
+        educational_lag * 0.45
+        + no_healthcare * 0.35
+        + indigenous_presence * 0.1
+        + foreign_born * 0.1,
+    )
+
+    nearby_ecobici = sum(
+        1
+        for coords in territorial_context["ecobiciPoints"]
+        if haversine_meters(point, coords) <= 800
+    )
+
+    cycle_km_nearby = 0
+    for feature in territorial_context["cycleFeatures"]:
+        if not bbox_contains_point(feature["bbox"], point, padding_m=900):
+            continue
+        if geometry_distance_meters(point, feature["geometry"]) <= 800:
+            cycle_km_nearby += feature["lengthM"]
+    cycle_km_nearby = round(cycle_km_nearby / 1000, 1)
+
+    primary_road_km = 0
+    primary_road_count = 0
+    access_controlled_count = 0
+    road_barrier_score = 0
+    for feature in territorial_context["roadFeatures"]:
+        if not bbox_contains_point(feature["bbox"], point, padding_m=700):
+            continue
+        distance = geometry_distance_meters(point, feature["geometry"])
+        if distance > 550:
+            continue
+        primary_road_count += 1
+        primary_road_km += feature["lengthM"]
+        road_type = normalize_text(feature["properties"].get("TIPO_VIA", ""))
+        if "acceso-controlado" in road_type:
+            access_controlled_count += 1
+        road_barrier_score += max(0, 1 - distance / 550)
+
+    road_barrier_score = min(1, road_barrier_score / 4)
+    primary_road_km = round(primary_road_km / 1000, 1)
+
+    return {
+        "agebCode": ageb_props.get("ageb", ""),
+        "agebPopulation": population,
+        "socialPressure": social_pressure,
+        "nearbyEcobici": nearby_ecobici,
+        "cycleKmNearby": cycle_km_nearby,
+        "primaryRoadKmNearby": primary_road_km,
+        "primaryRoadCount": primary_road_count,
+        "accessControlledRoadCount": access_controlled_count,
+        "roadBarrierScore": road_barrier_score,
+        "territorialCoverage": 1 if ageb_match else 0,
+        "territorialMatchType": territorial_match_type,
+    }
 
 
 def compute_metro_ridership_by_station(csv_path: Path):
@@ -595,7 +1021,9 @@ def compute_metrobus_ridership_by_line(csv_path: Path):
     return compute_average_ridership_by_key(csv_path, key_field="linea")
 
 
-def compute_average_ridership_by_key(csv_path: Path, key_field: str | None = None, default_key="0"):
+def compute_average_ridership_by_key(
+    csv_path: Path, key_field: str | None = None, default_key="0"
+):
     rows = read_csv_rows(csv_path)
     parsed = []
     for row in rows:
@@ -603,7 +1031,9 @@ def compute_average_ridership_by_key(csv_path: Path, key_field: str | None = Non
         if not dt:
             continue
         if key_field:
-            parsed_key = (fix_mojibake(row.get(key_field, "")).strip().lstrip("0") or default_key)
+            parsed_key = (
+                fix_mojibake(row.get(key_field, "")).strip().lstrip("0") or default_key
+            )
             codes = parse_line_codes(parsed_key, "metrobus")
             bucket_key = codes[0] if codes else parsed_key
         else:
@@ -634,9 +1064,19 @@ def compute_average_ridership_by_key(csv_path: Path, key_field: str | None = Non
     return {line: round(total / denominator) for line, total in buckets.items()}
 
 
-def build_station_record(mode: str, point, props: dict, default_name: str, line_code: str, index: int, ridership=0):
+def build_station_record(
+    mode: str,
+    point,
+    props: dict,
+    default_name: str,
+    line_code: str,
+    index: int,
+    ridership=0,
+):
     name = props.get("NOMBRE") or props.get("NAME") or default_name
-    station_code = fix_mojibake(props.get("CVE_EST") or props.get("EST") or props.get("stop_id") or "")
+    station_code = fix_mojibake(
+        props.get("CVE_EST") or props.get("EST") or props.get("stop_id") or ""
+    )
     base_slug = normalize_text(name)
     return {
         "id": f"{mode}-{line_code}-{normalize_text(station_code or base_slug)}-{index}",
@@ -709,7 +1149,9 @@ def build_metro_stations_from_shp(stations_shp: Path, ridership_by_station: dict
     return list(by_station.values())
 
 
-def build_distributed_shp_stations(stations_shp: Path, ridership_by_line: dict, mode: str, default_line_code="0"):
+def build_distributed_shp_stations(
+    stations_shp: Path, ridership_by_line: dict, mode: str, default_line_code="0"
+):
     features = read_shp_features(stations_shp)
     raw = []
 
@@ -773,9 +1215,13 @@ def build_metrobus_stations(stations_kmz: Path, ridership_by_line: dict):
     return build_distributed_kmz_stations(stations_kmz, ridership_by_line, "metrobus")
 
 
-def build_distributed_kmz_stations(stations_kmz: Path, ridership_by_line: dict, mode: str, default_line_code="0"):
+def build_distributed_kmz_stations(
+    stations_kmz: Path, ridership_by_line: dict, mode: str, default_line_code="0"
+):
     if stations_kmz.suffix.lower() == ".shp":
-        return build_distributed_shp_stations(stations_kmz, ridership_by_line, mode, default_line_code=default_line_code)
+        return build_distributed_shp_stations(
+            stations_kmz, ridership_by_line, mode, default_line_code=default_line_code
+        )
 
     placemarks = read_kmz_placemarks(stations_kmz)
     raw = []
@@ -804,7 +1250,9 @@ def build_distributed_kmz_stations(stations_kmz: Path, ridership_by_line: dict, 
                 "lineColor": color_for_mode(mode, code),
                 "lineCode": code,
                 "nameKey": normalize_text(name),
-                "stationCode": fix_mojibake(props.get("CVE_EST") or props.get("EST") or ""),
+                "stationCode": fix_mojibake(
+                    props.get("CVE_EST") or props.get("EST") or ""
+                ),
                 "variantHints": parse_variant_hints(mode, props),
                 "sourceCount": 1,
                 "dailyRidership": 0,
@@ -819,12 +1267,24 @@ def build_distributed_kmz_stations(stations_kmz: Path, ridership_by_line: dict, 
 def collapse_station_cluster(target, station):
     count = target.get("sourceCount", 1)
     target["coordinates"] = [
-        round(((target["coordinates"][0] * count) + station["coordinates"][0]) / (count + 1), 6),
-        round(((target["coordinates"][1] * count) + station["coordinates"][1]) / (count + 1), 6),
+        round(
+            ((target["coordinates"][0] * count) + station["coordinates"][0])
+            / (count + 1),
+            6,
+        ),
+        round(
+            ((target["coordinates"][1] * count) + station["coordinates"][1])
+            / (count + 1),
+            6,
+        ),
     ]
-    target["variantHints"] = unique_list(target.get("variantHints", []) + station.get("variantHints", []))
+    target["variantHints"] = unique_list(
+        target.get("variantHints", []) + station.get("variantHints", [])
+    )
     target["sourceCount"] = count + station.get("sourceCount", 1)
-    target["name"] = min([target["name"], station["name"]], key=lambda value: (len(value), value))
+    target["name"] = min(
+        [target["name"], station["name"]], key=lambda value: (len(value), value)
+    )
     if not target.get("stationCode") and station.get("stationCode"):
         target["stationCode"] = station["stationCode"]
 
@@ -838,15 +1298,28 @@ def collapse_stations_by_line(stations, mode):
     collapsed = []
     for line_code, line_stations in grouped.items():
         clusters = []
-        ordered = sorted(line_stations, key=lambda item: (item["nameKey"], item["coordinates"][0], item["coordinates"][1], item["id"]))
+        ordered = sorted(
+            line_stations,
+            key=lambda item: (
+                item["nameKey"],
+                item["coordinates"][0],
+                item["coordinates"][1],
+                item["id"],
+            ),
+        )
         for station in ordered:
             match = None
             for candidate in clusters:
                 same_name = station["nameKey"] == candidate["nameKey"]
-                same_code = station.get("stationCode") and station["stationCode"] == candidate.get("stationCode")
+                same_code = station.get("stationCode") and station[
+                    "stationCode"
+                ] == candidate.get("stationCode")
                 if not same_name and not same_code:
                     continue
-                if haversine_meters(station["coordinates"], candidate["coordinates"]) <= threshold:
+                if (
+                    haversine_meters(station["coordinates"], candidate["coordinates"])
+                    <= threshold
+                ):
                     match = candidate
                     break
 
@@ -854,9 +1327,13 @@ def collapse_stations_by_line(stations, mode):
                 collapse_station_cluster(match, station)
                 continue
 
-            base_slug = station["stationCode"] or station["nameKey"] or f"linea-{line_code}"
+            base_slug = (
+                station["stationCode"] or station["nameKey"] or f"linea-{line_code}"
+            )
             station_copy = dict(station)
-            station_copy["id"] = f"{mode}-{line_code}-{normalize_text(base_slug)}-{len(clusters)}"
+            station_copy["id"] = (
+                f"{mode}-{line_code}-{normalize_text(base_slug)}-{len(clusters)}"
+            )
             clusters.append(station_copy)
 
         collapsed.extend(clusters)
@@ -912,11 +1389,15 @@ def build_line_geometries_from_shp(lines_shp: Path, mode):
         if feature["geometry"]["type"] != "MultiLineString":
             continue
         props = feature["properties"]
-        codes = parse_line_codes(props.get("LINEA") or props.get("LINE") or props.get("RUTA") or "", mode)
+        codes = parse_line_codes(
+            props.get("LINEA") or props.get("LINE") or props.get("RUTA") or "", mode
+        )
         if not codes:
             continue
 
-        segments = [coords for coords in feature["geometry"]["coordinates"] if len(coords) >= 2]
+        segments = [
+            coords for coords in feature["geometry"]["coordinates"] if len(coords) >= 2
+        ]
         if not segments:
             continue
 
@@ -983,7 +1464,10 @@ def project_point_to_polyline(point, polyline):
 
 def order_stations_by_topology(line_stations, line_segments):
     if not line_segments:
-        return sorted(line_stations, key=lambda item: (item["coordinates"][0], item["coordinates"][1]))
+        return sorted(
+            line_stations,
+            key=lambda item: (item["coordinates"][0], item["coordinates"][1]),
+        )
 
     ranked = []
     for station in line_stations:
@@ -1031,7 +1515,10 @@ def assign_stations_to_variants(line_stations, variants, mode):
                 {
                     "variantKey": variant["variantKey"],
                     "distance": projection["distance"],
-                    "hintMatch": bool(set(station.get("variantHints", [])) & set(variant.get("variantHints", []))),
+                    "hintMatch": bool(
+                        set(station.get("variantHints", []))
+                        & set(variant.get("variantHints", []))
+                    ),
                 }
             )
 
@@ -1045,7 +1532,8 @@ def assign_stations_to_variants(line_stations, variants, mode):
         selected = [
             item
             for item in pool
-            if item["distance"] <= threshold and item["distance"] <= best_distance + tolerance
+            if item["distance"] <= threshold
+            and item["distance"] <= best_distance + tolerance
         ]
         if not selected:
             selected = [min(pool, key=lambda item: item["distance"])]
@@ -1097,10 +1585,20 @@ def match_gtfs_stop_to_station(stop, candidates):
         return None
 
     stop_name_key = normalize_text(stop.get("stop_name", ""))
-    stop_point = [float(stop.get("stop_lon", 0) or 0), float(stop.get("stop_lat", 0) or 0)]
-    exact = [candidate for candidate in candidates if normalize_text(candidate["name"]) == stop_name_key]
+    stop_point = [
+        float(stop.get("stop_lon", 0) or 0),
+        float(stop.get("stop_lat", 0) or 0),
+    ]
+    exact = [
+        candidate
+        for candidate in candidates
+        if normalize_text(candidate["name"]) == stop_name_key
+    ]
     pool = exact or candidates
-    best = min(pool, key=lambda candidate: haversine_meters(stop_point, candidate["coordinates"]))
+    best = min(
+        pool,
+        key=lambda candidate: haversine_meters(stop_point, candidate["coordinates"]),
+    )
     return best
 
 
@@ -1118,7 +1616,9 @@ def build_routes_from_gtfs(stations, gtfs_data):
     for stop_time in gtfs_data["stop_times.txt"]:
         stop_times_by_trip[stop_time["trip_id"]].append(stop_time)
     for trip_id in stop_times_by_trip:
-        stop_times_by_trip[trip_id].sort(key=lambda item: int(item.get("stop_sequence", "0") or 0))
+        stop_times_by_trip[trip_id].sort(
+            key=lambda item: int(item.get("stop_sequence", "0") or 0)
+        )
 
     stops_by_id = {stop["stop_id"]: stop for stop in gtfs_data["stops.txt"]}
     features_by_pair = {}
@@ -1144,7 +1644,11 @@ def build_routes_from_gtfs(stations, gtfs_data):
                     route_id,
                     trip.get("direction_id", "0"),
                     trip.get("shape_id", "shape"),
-                    normalize_text(trip.get("trip_headsign", "") or route.get("route_long_name", "")) or "default",
+                    normalize_text(
+                        trip.get("trip_headsign", "")
+                        or route.get("route_long_name", "")
+                    )
+                    or "default",
                 ]
             )
             variants.setdefault(variant_key, trip)
@@ -1176,7 +1680,11 @@ def build_routes_from_gtfs(stations, gtfs_data):
 
                 pair = tuple(sorted([a["id"], b["id"]]))
                 edge_key = (mode, line, pair[0], pair[1])
-                variant_label = trip.get("trip_headsign", "") or route.get("route_long_name", "") or "Ruta principal"
+                variant_label = (
+                    trip.get("trip_headsign", "")
+                    or route.get("route_long_name", "")
+                    or "Ruta principal"
+                )
                 feature = features_by_pair.get(edge_key)
                 if feature is None:
                     features_by_pair[edge_key] = {
@@ -1205,7 +1713,9 @@ def build_routes_from_gtfs(stations, gtfs_data):
                 labels.add(variant_label)
                 feature["properties"]["variantLabels"] = sorted(labels)
                 feature["properties"]["variantCount"] = len(labels)
-                feature["properties"]["variantLabel"] = " | ".join(feature["properties"]["variantLabels"])
+                feature["properties"]["variantLabel"] = " | ".join(
+                    feature["properties"]["variantLabels"]
+                )
 
     return {"type": "FeatureCollection", "features": list(features_by_pair.values())}
 
@@ -1225,8 +1735,17 @@ def build_routes_from_stations(stations, line_geometries):
         variant_index = {variant["variantKey"]: variant for variant in variants}
 
         for variant_key, variant_stations in assigned.items():
-            variant = variant_index.get(variant_key, {"segments": [], "variantKey": variant_key, "variantLabel": "Ruta principal"})
-            ordered = order_stations_by_topology(variant_stations, variant.get("segments", []))
+            variant = variant_index.get(
+                variant_key,
+                {
+                    "segments": [],
+                    "variantKey": variant_key,
+                    "variantLabel": "Ruta principal",
+                },
+            )
+            ordered = order_stations_by_topology(
+                variant_stations, variant.get("segments", [])
+            )
             candidate_edges = []
             for idx in range(len(ordered) - 1):
                 a = ordered[idx]
@@ -1240,7 +1759,9 @@ def build_routes_from_stations(stations, line_geometries):
 
                 candidate_edges.append((a, b, distance_m))
 
-            distance_limit = line_distance_limit(mode, [distance for _, _, distance in candidate_edges])
+            distance_limit = line_distance_limit(
+                mode, [distance for _, _, distance in candidate_edges]
+            )
             for a, b, distance_m in candidate_edges:
                 if distance_m > distance_limit:
                     continue
@@ -1259,7 +1780,9 @@ def build_routes_from_stations(stations, line_geometries):
                             "mode": mode,
                             "line": line,
                             "variant": variant.get("variantKey", variant_key),
-                            "variantLabel": variant.get("variantLabel", "Ruta principal"),
+                            "variantLabel": variant.get(
+                                "variantLabel", "Ruta principal"
+                            ),
                             "lineColor": a["lineColor"],
                             "from": a["id"],
                             "to": b["id"],
@@ -1290,16 +1813,69 @@ def nearest_alternative(station, stations):
     return best["name"], round(best_distance)
 
 
-def station_metrics(station, stations):
+def station_metrics(station, stations, territorial_context):
     daily = station["dailyRidership"]
     transfer_penalty = max(0, len(station["lines"]) - 1)
-    mode_base = 0.74 if station["mode"] == "metro" else 0.62
-    impact_share = max(0.35, min(0.9, mode_base + transfer_penalty * 0.04))
+    territorial = territorial_profile_for_station(station, territorial_context)
+    mode_base = 0.72 if station["mode"] == "metro" else 0.61
+    cycle_relief = min(
+        0.16,
+        territorial["cycleKmNearby"] * 0.025 + territorial["nearbyEcobici"] * 0.004,
+    )
+    road_penalty = min(
+        0.14,
+        territorial["roadBarrierScore"] * 0.11
+        + territorial["accessControlledRoadCount"] * 0.02,
+    )
+    social_penalty = territorial["socialPressure"] * 0.12
+    local_population_boost = min(0.08, territorial["agebPopulation"] / 70000)
+    impact_share = max(
+        0.28,
+        min(
+            0.93,
+            mode_base
+            + transfer_penalty * 0.04
+            + road_penalty
+            + social_penalty
+            + local_population_boost
+            - cycle_relief,
+        ),
+    )
     impacted = round(daily * impact_share)
-    vulnerable_share = 0.21 if station["mode"] == "metro" else 0.18
+    vulnerable_share = min(
+        0.42,
+        (0.2 if station["mode"] == "metro" else 0.17)
+        + territorial["socialPressure"] * 0.18
+        + road_penalty * 0.35,
+    )
     vulnerable = round(impacted * vulnerable_share)
-    commute_delta = min(46, max(12, 18 + transfer_penalty * 6 + (8 if station["mode"] == "metro" else 4)))
+    commute_delta = min(
+        58,
+        max(
+            10,
+            17
+            + transfer_penalty * 6
+            + road_penalty * 42
+            + territorial["socialPressure"] * 18
+            - cycle_relief * 22
+            + (8 if station["mode"] == "metro" else 4),
+        ),
+    )
     nearest_name, nearest_distance = nearest_alternative(station, stations)
+    resilience_score = round(
+        max(
+            18,
+            min(
+                96,
+                44
+                + territorial["cycleKmNearby"] * 4.5
+                + territorial["nearbyEcobici"] * 0.75
+                - territorial["roadBarrierScore"] * 18
+                - territorial["socialPressure"] * 16
+                - transfer_penalty * 3,
+            ),
+        )
+    )
 
     return {
         "id": station["id"],
@@ -1315,11 +1891,22 @@ def station_metrics(station, stations):
         "impactSharePct": round(impact_share * 100, 1),
         "vulnerabilitySharePct": round(vulnerable_share * 100, 1),
         "transferPenalty": transfer_penalty,
-        "nearbyEcobici": 0,
-        "cycleKmNearby": 0,
+        "nearbyEcobici": territorial["nearbyEcobici"],
+        "cycleKmNearby": territorial["cycleKmNearby"],
         "nearestAlternative": nearest_name,
         "nearestAlternativeDistanceM": nearest_distance,
-        "resilienceScore": 35 if station["mode"] == "metro" else 42,
+        "resilienceScore": resilience_score,
+        "territorial": {
+            "agebCode": territorial["agebCode"],
+            "agebPopulation": territorial["agebPopulation"],
+            "socialPressurePct": round(territorial["socialPressure"] * 100, 1),
+            "roadBarrierScorePct": round(territorial["roadBarrierScore"] * 100, 1),
+            "primaryRoadKmNearby": territorial["primaryRoadKmNearby"],
+            "primaryRoadCount": territorial["primaryRoadCount"],
+            "accessControlledRoadCount": territorial["accessControlledRoadCount"],
+            "territorialCoverage": territorial["territorialCoverage"],
+            "territorialMatchType": territorial["territorialMatchType"],
+        },
     }
 
 
@@ -1327,34 +1914,58 @@ def build_optional_subsystem(data_dir: Path, config: dict):
     ridership_csv = first_existing_path(data_dir, config["ridership_candidates"])
     ridership_exists = ridership_csv.exists()
     ridership_by_line = (
-        compute_average_ridership_by_key(ridership_csv, key_field="linea", default_key=config.get("line_code", "0"))
+        compute_average_ridership_by_key(
+            ridership_csv, key_field="linea", default_key=config.get("line_code", "0")
+        )
         if ridership_exists and config["mode"] != "trenligero"
-        else compute_average_ridership_by_key(ridership_csv, default_key=config.get("line_code", "1"))
+        else compute_average_ridership_by_key(
+            ridership_csv, default_key=config.get("line_code", "1")
+        )
         if ridership_exists
         else {}
     )
 
     shp_cache_dir = Path(tempfile.gettempdir()) / "smart-commute-cdmx-electric-shp"
     kmz_cache_dir = Path(tempfile.gettempdir()) / "smart-commute-cdmx-electric-kmz"
-    stations_shp_candidate = first_existing_path(data_dir, config["shp_candidates"]["stations"])
-    lines_shp_candidate = first_existing_path(data_dir, config["shp_candidates"]["lines"])
-    stations_candidate = first_matching_glob(data_dir, config["cartography_globs"]["stations"])
-    lines_candidate = first_matching_glob(data_dir, config["cartography_globs"]["lines"])
+    stations_shp_candidate = first_existing_path(
+        data_dir, config["shp_candidates"]["stations"]
+    )
+    lines_shp_candidate = first_existing_path(
+        data_dir, config["shp_candidates"]["lines"]
+    )
+    stations_candidate = first_matching_glob(
+        data_dir, config["cartography_globs"]["stations"]
+    )
+    lines_candidate = first_matching_glob(
+        data_dir, config["cartography_globs"]["lines"]
+    )
     stations_source = None
     lines_source = None
 
     if stations_shp_candidate.exists() and lines_shp_candidate.exists():
-        stations_source = ensure_extracted_shp(stations_shp_candidate, config["shp_candidates"]["station_keywords"], shp_cache_dir)
-        lines_source = ensure_extracted_shp(lines_shp_candidate, config["shp_candidates"]["line_keywords"], shp_cache_dir)
+        stations_source = ensure_extracted_shp(
+            stations_shp_candidate,
+            config["shp_candidates"]["station_keywords"],
+            shp_cache_dir,
+        )
+        lines_source = ensure_extracted_shp(
+            lines_shp_candidate,
+            config["shp_candidates"]["line_keywords"],
+            shp_cache_dir,
+        )
 
     if stations_source is None or lines_source is None:
         stations_source = (
-            ensure_extracted_kmz(stations_candidate, config["archive_members"]["stations"], kmz_cache_dir)
+            ensure_extracted_kmz(
+                stations_candidate, config["archive_members"]["stations"], kmz_cache_dir
+            )
             if stations_candidate is not None
             else None
         )
         lines_source = (
-            ensure_extracted_kmz(lines_candidate, config["archive_members"]["lines"], kmz_cache_dir)
+            ensure_extracted_kmz(
+                lines_candidate, config["archive_members"]["lines"], kmz_cache_dir
+            )
             if lines_candidate is not None
             else None
         )
@@ -1374,17 +1985,27 @@ def build_optional_subsystem(data_dir: Path, config: dict):
             line_geometries = build_line_geometries(lines_source, config["mode"])
         except Exception:
             stations_source = (
-                ensure_extracted_kmz(stations_candidate, config["archive_members"]["stations"], kmz_cache_dir)
+                ensure_extracted_kmz(
+                    stations_candidate,
+                    config["archive_members"]["stations"],
+                    kmz_cache_dir,
+                )
                 if stations_candidate is not None
                 else None
             )
             lines_source = (
-                ensure_extracted_kmz(lines_candidate, config["archive_members"]["lines"], kmz_cache_dir)
+                ensure_extracted_kmz(
+                    lines_candidate, config["archive_members"]["lines"], kmz_cache_dir
+                )
                 if lines_candidate is not None
                 else None
             )
             has_geography = stations_source is not None and lines_source is not None
-            if has_geography and stations_source is not None and lines_source is not None:
+            if (
+                has_geography
+                and stations_source is not None
+                and lines_source is not None
+            ):
                 stations = build_distributed_kmz_stations(
                     stations_source,
                     ridership_by_line,
@@ -1416,15 +2037,21 @@ def load_mvp_context():
 
     payload = json.loads(MVP_PATH.read_text(encoding="utf-8"))
     return {
-        "ecobici": payload.get("ecobici", {"type": "FeatureCollection", "features": []}),
-        "cycleInfra": payload.get("cycleInfra", {"type": "FeatureCollection", "features": []}),
+        "ecobici": payload.get(
+            "ecobici", {"type": "FeatureCollection", "features": []}
+        ),
+        "cycleInfra": payload.get(
+            "cycleInfra", {"type": "FeatureCollection", "features": []}
+        ),
         "summary": payload.get("summary", {}),
     }
 
 
 def write_json(name: str, payload):
     ensure_output_dir()
-    (OUTPUT_DIR / name).write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    (OUTPUT_DIR / name).write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
 
 
 def build_network_diagnostics(stations, routes):
@@ -1438,8 +2065,14 @@ def build_network_diagnostics(stations, routes):
         line_buckets[(props["mode"], props["line"])].append(feature)
 
     for mode in sorted({station["mode"] for station in stations}):
-        mode_routes = [feature for feature in routes["features"] if feature["properties"]["mode"] == mode]
-        distances = sorted(feature["properties"]["distanceM"] for feature in mode_routes)
+        mode_routes = [
+            feature
+            for feature in routes["features"]
+            if feature["properties"]["mode"] == mode
+        ]
+        distances = sorted(
+            feature["properties"]["distanceM"] for feature in mode_routes
+        )
         summary_by_mode[mode] = {
             "stationCount": sum(1 for station in stations if station["mode"] == mode),
             "edgeCount": len(mode_routes),
@@ -1449,26 +2082,40 @@ def build_network_diagnostics(stations, routes):
 
     for (mode, line), features in sorted(line_buckets.items()):
         distances = [feature["properties"]["distanceM"] for feature in features]
-        route_sources = {feature["properties"].get("source", "unknown") for feature in features}
+        route_sources = {
+            feature["properties"].get("source", "unknown") for feature in features
+        }
         is_gtfs_line = route_sources == {"gtfs"}
         short_edges = []
         long_edges = []
-        for feature in sorted(features, key=lambda item: item["properties"]["distanceM"]):
+        for feature in sorted(
+            features, key=lambda item: item["properties"]["distanceM"]
+        ):
             props = feature["properties"]
             from_station = stations_by_id[props["from"]]
             to_station = stations_by_id[props["to"]]
             record = {
-                "variant": props.get("variantLabel") or props.get("variant") or "Ruta principal",
+                "variant": props.get("variantLabel")
+                or props.get("variant")
+                or "Ruta principal",
                 "distanceM": props["distanceM"],
                 "from": from_station["name"],
                 "to": to_station["name"],
             }
-            if should_skip_short_edge(from_station, to_station, mode, props["distanceM"]):
+            if should_skip_short_edge(
+                from_station, to_station, mode, props["distanceM"]
+            ):
                 short_edges.append(record)
-            if not is_gtfs_line and props["distanceM"] > line_distance_limit(mode, distances):
+            if not is_gtfs_line and props["distanceM"] > line_distance_limit(
+                mode, distances
+            ):
                 long_edges.append(record)
 
-        line_stations = [station for station in stations if station["mode"] == mode and line in station["lines"]]
+        line_stations = [
+            station
+            for station in stations
+            if station["mode"] == mode and line in station["lines"]
+        ]
         duplicate_groups = []
         by_name = defaultdict(list)
         for station in line_stations:
@@ -1480,7 +2127,10 @@ def build_network_diagnostics(stations, routes):
                 continue
 
             min_distance = min(
-                haversine_meters(named_stations[left]["coordinates"], named_stations[right]["coordinates"])
+                haversine_meters(
+                    named_stations[left]["coordinates"],
+                    named_stations[right]["coordinates"],
+                )
                 for left in range(len(named_stations))
                 for right in range(left + 1, len(named_stations))
             )
@@ -1507,17 +2157,34 @@ def build_network_diagnostics(stations, routes):
                 "stationCount": len(line_stations),
                 "edgeCount": len(features),
                 "routeSources": sorted(route_sources),
-                "medianDistanceM": round(statistics.median(distances)) if distances else 0,
+                "medianDistanceM": round(statistics.median(distances))
+                if distances
+                else 0,
                 "maxDistanceM": max(distances) if distances else 0,
-                "duplicateStationNames": [] if is_gtfs_line else sorted(duplicate_groups, key=lambda item: (-item["count"], item["minDistanceM"], item["name"]))[:12],
+                "duplicateStationNames": []
+                if is_gtfs_line
+                else sorted(
+                    duplicate_groups,
+                    key=lambda item: (
+                        -item["count"],
+                        item["minDistanceM"],
+                        item["name"],
+                    ),
+                )[:12],
                 "shortEdges": short_edges[:12],
-                "longEdges": sorted(long_edges, key=lambda item: item["distanceM"], reverse=True)[:12],
+                "longEdges": sorted(
+                    long_edges, key=lambda item: item["distanceM"], reverse=True
+                )[:12],
             }
         )
 
     suspicious_lines.sort(
         key=lambda item: (
-            -(len(item["shortEdges"]) + len(item["longEdges"]) + len(item["duplicateStationNames"])),
+            -(
+                len(item["shortEdges"])
+                + len(item["longEdges"])
+                + len(item["duplicateStationNames"])
+            ),
             -item["maxDistanceM"],
             item["mode"],
             item["line"],
@@ -1538,19 +2205,63 @@ def main():
 
     gtfs_zip = first_existing_path(data_dir, GTFS_CANDIDATES)
 
-    metro_stations_shp = first_existing_path(data_dir, [Path("raw-data/stc-metro/cartography/shp/STC_Metro_estaciones_utm14n.shp")])
-    metro_lines_shp = first_existing_path(data_dir, [Path("raw-data/stc-metro/cartography/shp/STC_Metro_lineas_utm14n.shp")])
-    metro_stations_kmz = first_existing_path(data_dir, [Path("raw-data/stc-metro/cartography/kmz/STC_Metro_estaciones.kmz"), Path("stcmetro_kmz/STC_Metro_estaciones.kmz")])
-    metro_lines_kmz = first_existing_path(data_dir, [Path("raw-data/stc-metro/cartography/kmz/STC_Metro_lineas.kmz"), Path("stcmetro_kmz/STC_Metro_lineas.kmz")])
-    metrobus_stations_shp = first_existing_path(data_dir, [Path("raw-data/metrobus/cartography/shp/Metrobus_estaciones.shp")])
-    metrobus_lines_shp = first_existing_path(data_dir, [Path("raw-data/metrobus/cartography/shp/Metrobus_lineas.shp")])
-    metrobus_stations_kmz = first_existing_path(data_dir, [Path("raw-data/metrobus/cartography/kmz/Metrobus_estaciones.kmz"), Path("mb_kmz/Metrobus_estaciones.kmz")])
-    metrobus_lines_kmz = first_existing_path(data_dir, [Path("raw-data/metrobus/cartography/kmz/Metrobus_lineas.kmz"), Path("mb_kmz/Metrobus_lineas.kmz")])
+    metro_stations_shp = first_existing_path(
+        data_dir,
+        [Path("raw-data/stc-metro/cartography/shp/STC_Metro_estaciones_utm14n.shp")],
+    )
+    metro_lines_shp = first_existing_path(
+        data_dir,
+        [Path("raw-data/stc-metro/cartography/shp/STC_Metro_lineas_utm14n.shp")],
+    )
+    metro_stations_kmz = first_existing_path(
+        data_dir,
+        [
+            Path("raw-data/stc-metro/cartography/kmz/STC_Metro_estaciones.kmz"),
+            Path("stcmetro_kmz/STC_Metro_estaciones.kmz"),
+        ],
+    )
+    metro_lines_kmz = first_existing_path(
+        data_dir,
+        [
+            Path("raw-data/stc-metro/cartography/kmz/STC_Metro_lineas.kmz"),
+            Path("stcmetro_kmz/STC_Metro_lineas.kmz"),
+        ],
+    )
+    metrobus_stations_shp = first_existing_path(
+        data_dir, [Path("raw-data/metrobus/cartography/shp/Metrobus_estaciones.shp")]
+    )
+    metrobus_lines_shp = first_existing_path(
+        data_dir, [Path("raw-data/metrobus/cartography/shp/Metrobus_lineas.shp")]
+    )
+    metrobus_stations_kmz = first_existing_path(
+        data_dir,
+        [
+            Path("raw-data/metrobus/cartography/kmz/Metrobus_estaciones.kmz"),
+            Path("mb_kmz/Metrobus_estaciones.kmz"),
+        ],
+    )
+    metrobus_lines_kmz = first_existing_path(
+        data_dir,
+        [
+            Path("raw-data/metrobus/cartography/kmz/Metrobus_lineas.kmz"),
+            Path("mb_kmz/Metrobus_lineas.kmz"),
+        ],
+    )
 
-    metro_stations_source = metro_stations_shp if metro_stations_shp.exists() else metro_stations_kmz
-    metro_lines_source = metro_lines_shp if metro_lines_shp.exists() else metro_lines_kmz
-    metrobus_stations_source = metrobus_stations_shp if metrobus_stations_shp.exists() else metrobus_stations_kmz
-    metrobus_lines_source = metrobus_lines_shp if metrobus_lines_shp.exists() else metrobus_lines_kmz
+    metro_stations_source = (
+        metro_stations_shp if metro_stations_shp.exists() else metro_stations_kmz
+    )
+    metro_lines_source = (
+        metro_lines_shp if metro_lines_shp.exists() else metro_lines_kmz
+    )
+    metrobus_stations_source = (
+        metrobus_stations_shp
+        if metrobus_stations_shp.exists()
+        else metrobus_stations_kmz
+    )
+    metrobus_lines_source = (
+        metrobus_lines_shp if metrobus_lines_shp.exists() else metrobus_lines_kmz
+    )
     metro_ridership_csv = first_existing_path(
         data_dir,
         [
@@ -1582,7 +2293,10 @@ def main():
     gtfs_data = read_gtfs_feed(gtfs_zip)
     metro_ridership = compute_metro_ridership_by_station(metro_ridership_csv)
     metrobus_ridership = compute_metrobus_ridership_by_line(metrobus_ridership_csv)
-    electric_subsystems = [build_optional_subsystem(data_dir, subsystem) for subsystem in ELECTRIC_SUBSYSTEMS]
+    electric_subsystems = [
+        build_optional_subsystem(data_dir, subsystem)
+        for subsystem in ELECTRIC_SUBSYSTEMS
+    ]
 
     try:
         metro_stations = build_metro_stations(metro_stations_source, metro_ridership)
@@ -1592,29 +2306,50 @@ def main():
         metro_line_geometries = build_line_geometries(metro_lines_kmz, "metro")
 
     try:
-        metrobus_stations = build_metrobus_stations(metrobus_stations_source, metrobus_ridership)
-        metrobus_line_geometries = build_line_geometries(metrobus_lines_source, "metrobus")
+        metrobus_stations = build_metrobus_stations(
+            metrobus_stations_source, metrobus_ridership
+        )
+        metrobus_line_geometries = build_line_geometries(
+            metrobus_lines_source, "metrobus"
+        )
     except Exception:
-        metrobus_stations = build_metrobus_stations(metrobus_stations_kmz, metrobus_ridership)
+        metrobus_stations = build_metrobus_stations(
+            metrobus_stations_kmz, metrobus_ridership
+        )
         metrobus_line_geometries = build_line_geometries(metrobus_lines_kmz, "metrobus")
 
-    electric_stations = [station for subsystem in electric_subsystems for station in subsystem["stations"]]
-    all_stations = sorted(metro_stations + metrobus_stations + electric_stations, key=lambda item: item["dailyRidership"], reverse=True)
+    electric_stations = [
+        station
+        for subsystem in electric_subsystems
+        for station in subsystem["stations"]
+    ]
+    all_stations = sorted(
+        metro_stations + metrobus_stations + electric_stations,
+        key=lambda item: item["dailyRidership"],
+        reverse=True,
+    )
 
     line_geometries = {
         **metro_line_geometries,
         **metrobus_line_geometries,
-        **{key: value for subsystem in electric_subsystems for key, value in subsystem["lineGeometries"].items()},
+        **{
+            key: value
+            for subsystem in electric_subsystems
+            for key, value in subsystem["lineGeometries"].items()
+        },
     }
     routes = build_routes_from_gtfs(all_stations, gtfs_data)
     if not routes["features"]:
         routes = build_routes_from_stations(all_stations, line_geometries)
     diagnostics = build_network_diagnostics(all_stations, routes)
 
-    station_payload = [station_metrics(station, all_stations) for station in all_stations]
-    network_ridership = sum(item["dailyRidership"] for item in station_payload)
-
     mvp_context = load_mvp_context()
+    territorial_context = load_territorial_context(data_dir, mvp_context)
+    station_payload = [
+        station_metrics(station, all_stations, territorial_context)
+        for station in all_stations
+    ]
+    network_ridership = sum(item["dailyRidership"] for item in station_payload)
     metrobus_top = sorted(
         [
             {
@@ -1650,7 +2385,9 @@ def main():
             "label": "Metro",
             "averageDailyRidership": sum(metro_ridership.values()),
             "stationCount": len(metro_stations),
-            "lineCount": len({line for station in metro_stations for line in station["lines"]}),
+            "lineCount": len(
+                {line for station in metro_stations for line in station["lines"]}
+            ),
             "hasGeography": True,
         },
         {
@@ -1675,16 +2412,20 @@ def main():
         ],
     ]
     multimodal_modes = ", ".join(summary["label"] for summary in system_daily_ridership)
-    electric_context_note = " Los subsistemas electricos se resuelven con GTFS para secuencia/sentido y SHP local para geometria cuando esta disponible." if any(subsystem["hasGeography"] for subsystem in electric_subsystems) else ""
+    electric_context_note = (
+        " Los subsistemas electricos se resuelven con GTFS para secuencia/sentido y SHP local para geometria cuando esta disponible."
+        if any(subsystem["hasGeography"] for subsystem in electric_subsystems)
+        else ""
+    )
 
     generated_at = datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
     multimodal = {
         "generatedAt": generated_at,
-        "scopeNote": f"Dataset multimodal generado con afluencia 2026 para {multimodal_modes}. Metro y Metrobus ya operan con cobertura geoespacial completa; la solucion tambien incorpora Transportes Electricos desde raw-data/transportes-electricos.{electric_context_note}",
-        "methodologyNote": "GTFS define variantes, secuencia y sentido; SHP local define la geometria y el catalogo de estaciones cuando existe; la afluencia solo enriquece la capa analitica. Cuando falta GTFS o una reconciliacion suficiente, el ETL conserva fallback topologico desde cartografia oficial.",
+        "scopeNote": f"Dataset multimodal generado con afluencia 2026 para {multimodal_modes}. Metro y Metrobus ya operan con cobertura geoespacial completa; la solucion tambien incorpora Transportes Electricos desde raw-data/transportes-electricos y enriquecimiento territorial con AGEB INEGI, Ecobici, infraestructura ciclista y vialidades primarias.{electric_context_note}",
+        "methodologyNote": "GTFS define variantes, secuencia y sentido; SHP local define la geometria y el catalogo de estaciones cuando existe; la afluencia enriquece la capa analitica. El ETL incorpora contexto territorial de AGEB INEGI, red ciclista, Ecobici y vialidades primarias para modular severidad, resiliencia y vulnerabilidad alrededor de cada nodo.",
         "summary": {
-            "impactModelVersion": "v4.0-gtfs-shp-topology",
+            "impactModelVersion": "v5.0-territorial-enrichment",
             "latestMetroDate": "2026-03-31",
             "latestMetrobusDate": "2026-03-31",
             "averageMetroDaily": sum(metro_ridership.values()),
@@ -1692,11 +2433,19 @@ def main():
             "ecobiciStations": mvp_context["summary"].get("ecobiciStations", 0),
             "totalCycleKm": mvp_context["summary"].get("totalCycleKm", 0),
             "metroNetworkSegments": len(routes["features"]),
-            "metroNetworkKm": round(sum(f["properties"]["distanceM"] for f in routes["features"]) / 1000, 1),
+            "metroNetworkKm": round(
+                sum(f["properties"]["distanceM"] for f in routes["features"]) / 1000, 1
+            ),
             "networkRidershipDaily": network_ridership,
             "topMetrobusLines": metrobus_top,
             "systemDailyRidership": system_daily_ridership,
             "topNetworkLines": metrobus_top + electric_top_lines,
+            "territorialEnrichment": {
+                "agebDemographics": len(territorial_context["agebFeatures"]),
+                "primaryRoadSegments": len(territorial_context["roadFeatures"]),
+                "cycleInfraSegments": len(territorial_context["cycleFeatures"]),
+                "ecobiciStations": len(territorial_context["ecobiciPoints"]),
+            },
         },
         "stations": station_payload,
         "ecobici": mvp_context["ecobici"],
@@ -1742,7 +2491,7 @@ def main():
         {
             "generatedAt": generated_at,
             "sourceMode": "gtfs-shp-multimodal",
-            "methodology": "gtfs-sequence-shp-geometry-ridership-enrichment",
+            "methodology": "gtfs-sequence-shp-geometry-ridership-territorial-enrichment",
             "stations": {
                 s["id"]: {
                     "stationId": s["id"],
@@ -1758,7 +2507,7 @@ def main():
                         "nearest": s["nearestAlternative"],
                         "distanceM": s["nearestAlternativeDistanceM"],
                     },
-                    "methodology": "kmz-topology-ridership-estimation",
+                    "methodology": "gtfs-shp-ridership-territorial-estimation",
                 }
                 for s in station_payload
             },
@@ -1781,11 +2530,19 @@ def main():
                 "metrobusLinesSource": str(metrobus_lines_source),
                 "metroRidershipCsv": metro_ridership_csv.exists(),
                 "metrobusRidershipCsv": metrobus_ridership_csv.exists(),
+                "agebDemographicsSource": str(territorial_context["agebPath"]),
+                "agebDemographicsAvailable": territorial_context["agebPath"].exists(),
+                "primaryRoadsSource": str(territorial_context["roadsPath"]),
+                "primaryRoadsAvailable": territorial_context["roadsPath"].exists(),
                 "electricSubsystems": {
                     subsystem["mode"]: {
                         "ridershipCsv": subsystem["ridershipCsv"].exists(),
-                        "stationsSource": str(subsystem["stationsKmz"]) if subsystem["stationsKmz"] is not None else "",
-                        "linesSource": str(subsystem["linesKmz"]) if subsystem["linesKmz"] is not None else "",
+                        "stationsSource": str(subsystem["stationsKmz"])
+                        if subsystem["stationsKmz"] is not None
+                        else "",
+                        "linesSource": str(subsystem["linesKmz"])
+                        if subsystem["linesKmz"] is not None
+                        else "",
                         "hasGeography": subsystem["hasGeography"],
                     }
                     for subsystem in electric_subsystems
